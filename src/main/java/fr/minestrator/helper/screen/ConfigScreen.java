@@ -65,6 +65,8 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        //? if <1.21
+        /*this.renderBackground(context);*/
         super.render(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;

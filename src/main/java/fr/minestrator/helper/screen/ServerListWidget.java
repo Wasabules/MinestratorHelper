@@ -67,6 +67,13 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         return this.width - 20;
     }
 
+    //? if <1.21 {
+    /*@Override
+    protected int getScrollbarPosition() {
+        return this.width - 6;
+    }
+    *///?}
+
     public abstract static class Entry extends ObjectSelectionList.Entry<Entry> {
     }
 
