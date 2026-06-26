@@ -17,13 +17,20 @@ import java.util.List;
 /**
  * Live server console: streams the last console lines (ANSI colours, word-wrapped),
  * shows a live stats header (CPU / RAM / disk gauges + players), and sends commands.
- * Polls every ~1.5s.
+ * Scrollable (wheel + draggable scrollbar); the view is frozen while scrolled up so
+ * incoming lines don't shift what you're reading. Polls every ~1.5s.
  */
 public class ConsoleCommandScreen extends Screen {
     private final ConsoleCommandLogic logic;
     private EditBox commandField;
     private Button sendButton;
+    private Button downButton;
     private int tickCounter = 0;
+
+    private int scrollOffset = 0; // lines scrolled up from the bottom (0 = follow latest)
+    private boolean draggingScrollbar = false;
+    private List<List<AnsiParser.Segment>> frozen; // snapshot shown while scrolled up
+    private int lastAreaTop, lastAreaBottom, lastMaxScroll;
 
     public ConsoleCommandScreen() {
         super(Component.translatable("minestratorhelper.console.title"));
@@ -43,8 +50,18 @@ public class ConsoleCommandScreen extends Screen {
                 button -> sendCommand()).bounds(this.width - 78, inputY, 70, 20).build();
         this.addRenderableWidget(this.sendButton);
 
+        this.downButton = Button.builder(Component.literal("↓"),
+                button -> jumpToBottom()).bounds(this.width - 36, inputY - 24, 20, 20).build();
+        this.downButton.visible = false;
+        this.addRenderableWidget(this.downButton);
+
         logic.refreshLogs(null);
         logic.refreshLive(null);
+    }
+
+    private void jumpToBottom() {
+        scrollOffset = 0;
+        frozen = null;
     }
 
     @Override
@@ -73,6 +90,27 @@ public class ConsoleCommandScreen extends Screen {
                 }));
     }
 
+    private void scrollBy(int lines) {
+        scrollOffset = Math.max(0, scrollOffset + lines);
+    }
+
+    /** Maps a Y inside the scrollbar track to a scroll position. */
+    private boolean scrollbarTo(double mx, double my) {
+        if (lastMaxScroll <= 0) {
+            return false;
+        }
+        if (mx < this.width - 13 || mx > this.width - 2 || my < lastAreaTop || my > lastAreaBottom) {
+            return false;
+        }
+        int trackH = lastAreaBottom - lastAreaTop;
+        double frac = Math.max(0.0, Math.min(1.0, (my - lastAreaTop) / (double) trackH));
+        scrollOffset = (int) Math.round(lastMaxScroll * (1.0 - frac));
+        if (scrollOffset < 0) scrollOffset = 0;
+        if (scrollOffset > lastMaxScroll) scrollOffset = lastMaxScroll;
+        if (scrollOffset == 0) frozen = null;
+        return true;
+    }
+
     private boolean handleConsoleKey(int keyCode) {
         if ((keyCode == 257 || keyCode == 335) && this.commandField.isFocused()) {
             sendCommand();
@@ -92,6 +130,54 @@ public class ConsoleCommandScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (handleConsoleKey(keyCode)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    //?}
+
+    //? if >=1.21 {
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        scrollBy((int) Math.signum(scrollY) * 3);
+        return true;
+    }
+    //?} else {
+    /*@Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        scrollBy((int) Math.signum(amount) * 3);
+        return true;
+    }
+    *///?}
+
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubled) {
+        if (scrollbarTo(event.x(), event.y())) { draggingScrollbar = true; return true; }
+        return super.mouseClicked(event, doubled);
+    }
+    @Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dragX, double dragY) {
+        if (draggingScrollbar) { scrollbarTo(event.x(), event.y()); return true; }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+    @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        if (draggingScrollbar) { draggingScrollbar = false; return true; }
+        return super.mouseReleased(event);
+    }
+    *///?} else {
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (scrollbarTo(mx, my)) { draggingScrollbar = true; return true; }
+        return super.mouseClicked(mx, my, button);
+    }
+    @Override
+    public boolean mouseDragged(double mx, double my, int button, double dragX, double dragY) {
+        if (draggingScrollbar) { scrollbarTo(mx, my); return true; }
+        return super.mouseDragged(mx, my, button, dragX, dragY);
+    }
+    @Override
+    public boolean mouseReleased(double mx, double my, int button) {
+        if (draggingScrollbar) { draggingScrollbar = false; return true; }
+        return super.mouseReleased(mx, my, button);
     }
     //?}
 
@@ -123,11 +209,19 @@ public class ConsoleCommandScreen extends Screen {
                     "Joueurs", live.getCurrentPlayers() + "/" + live.getMaxPlayers());
         }
 
-        // Logs: ANSI colours, word-wrapped, auto-scrolled to the bottom.
-        int maxWidth = this.width - 16;
+        // Freeze the displayed logs while scrolled up so new lines don't shift the view.
+        if (scrollOffset > 0) {
+            if (frozen == null) frozen = logic.getLogLines();
+        } else {
+            frozen = null;
+        }
+        List<List<AnsiParser.Segment>> source = frozen != null ? frozen : logic.getLogLines();
+
+        // Logs: ANSI colours, word-wrapped, scrollable, clipped to the log area.
+        int maxWidth = this.width - 22; // leave room for the scrollbar
         int lineHeight = this.font.lineHeight + 1;
         List<FormattedCharSequence> visual = new ArrayList<>();
-        for (List<AnsiParser.Segment> logical : logic.getLogLines()) {
+        for (List<AnsiParser.Segment> logical : source) {
             MutableComponent comp = Component.empty();
             for (AnsiParser.Segment seg : logical) {
                 comp.append(Component.literal(seg.text).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(seg.color))));
@@ -135,12 +229,35 @@ public class ConsoleCommandScreen extends Screen {
             visual.addAll(this.font.split(comp, maxWidth));
         }
         int visibleCount = Math.max(0, (areaBottom - areaTop) / lineHeight);
-        int startIdx = Math.max(0, visual.size() - visibleCount);
+        int maxScroll = Math.max(0, visual.size() - visibleCount);
+        if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+        int startIdx = maxScroll - scrollOffset;
+        int endIdx = Math.min(visual.size(), startIdx + visibleCount);
+
+        this.lastAreaTop = areaTop;
+        this.lastAreaBottom = areaBottom;
+        this.lastMaxScroll = maxScroll;
+
+        context.enableScissor(4, areaTop, this.width - 4, areaBottom);
         int y = areaTop;
-        for (int i = startIdx; i < visual.size(); i++) {
+        for (int i = startIdx; i < endIdx; i++) {
             context.drawString(this.font, visual.get(i), 8, y, 0xFFFFFFFF, false);
             y += lineHeight;
         }
+        context.disableScissor();
+
+        // Scrollbar on the right (click / drag to navigate).
+        if (maxScroll > 0) {
+            int sbX = this.width - 9, sbW = 4;
+            int trackH = areaBottom - areaTop;
+            context.fill(sbX, areaTop, sbX + sbW, areaBottom, 0x30FFFFFF);
+            int thumbH = Math.max(16, trackH * visibleCount / visual.size());
+            int thumbY = areaTop + (trackH - thumbH) * (maxScroll - scrollOffset) / maxScroll;
+            context.fill(sbX, thumbY, sbX + sbW, thumbY + thumbH, draggingScrollbar ? 0xFFFFFFFF : 0xB0FFFFFF);
+        }
+
+        // "Back to bottom" button appears only while scrolled up.
+        this.downButton.visible = scrollOffset > 0;
     }
 
     @Override
