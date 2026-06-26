@@ -47,16 +47,17 @@ public class HostedServersScreen extends Screen {
 
     @Override
     protected void init() {
+        // Server list added first: on 1.20.1 the list paints top/bottom edge gradients over the
+        // area outside its bounds, which would hide any widget added before it (the top-bar buttons).
+        this.serverListWidget = new ServerListWidget(this.minecraft, this.width, this.height, 72, this.height - 32, 42);
+        this.serverListWidget.setBoxes(this.boxes);
+        this.addRenderableWidget(this.serverListWidget);
+
         // Top bar: Back (left) and Settings (right) — always reachable, even on small screens.
         this.addRenderableWidget(Button.builder(Component.translatable("gui.back"),
                 button -> this.minecraft.setScreen(this.parent)).bounds(6, 6, 50, 20).build());
         this.addRenderableWidget(Button.builder(Component.translatable("minestratorhelper.servers.config"),
                 button -> this.minecraft.setScreen(new ConfigScreen(this))).bounds(this.width - 76, 6, 70, 20).build());
-
-        // Server list (starts below the title + stats panel area).
-        this.serverListWidget = new ServerListWidget(this.minecraft, this.width, this.height, 72, this.height - 32, 42);
-        this.serverListWidget.setBoxes(this.boxes);
-        this.addRenderableWidget(this.serverListWidget);
 
         // Bottom: action buttons for the selected server.
         int buttonY = this.height - 28;
