@@ -66,5 +66,7 @@
   "minestratorhelper.command.stop_failed": "Failed to stop the server.",
   "minestratorhelper.command.start_sending": "Sending start command to %s...",
   "minestratorhelper.command.start_success": "Server %s is starting!",
-  "minestratorhelper.command.start_failed": "Failed to start the server."
+  "minestratorhelper.command.start_failed": "Failed to start the server.",
+  "minestratorhelper.command.sudo_sent": "Command sent: %s",
+  "minestratorhelper.command.sudo_failed": "Failed to send the command."
 }

@@ -1,5 +1,6 @@
 package fr.minestrator.helper.client;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent.ClientCommandSourceStack;
 import fr.minestrator.helper.api.ApiClient;
@@ -24,7 +25,38 @@ public final class Commands {
                     .executes(ctx -> powerAction(ctx.getSource(), "stop", "stop")));
             dispatcher.register(ClientCommandRegistrationEvent.literal("mstart")
                     .executes(ctx -> powerAction(ctx.getSource(), "start", "start")));
+            dispatcher.register(ClientCommandRegistrationEvent.literal("sudo")
+                    .then(ClientCommandRegistrationEvent.argument("command", StringArgumentType.greedyString())
+                            .executes(ctx -> sudo(ctx.getSource(), StringArgumentType.getString(ctx, "command")))));
         });
+    }
+
+    /** /sudo <command> — sends a raw command to the hosted server console via the API. */
+    private static int sudo(ClientCommandSourceStack source, String command) {
+        Integer serverId = ServerStateManager.getCurrentServerId();
+        if (serverId == null) {
+            source.arch$sendFailure(Component.translatable("minestratorhelper.command.not_on_hosted")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        source.arch$sendSuccess(() -> Component.literal("» " + command).withStyle(ChatFormatting.GRAY), false);
+
+        ApiClient.sendConsoleCommand(serverId, command).thenAccept(success ->
+                Minecraft.getInstance().execute(() -> {
+                    var player = Minecraft.getInstance().player;
+                    if (player == null) return;
+                    if (success) {
+                        player.displayClientMessage(Component.translatable(
+                                "minestratorhelper.command.sudo_sent", command)
+                                .withStyle(ChatFormatting.GREEN), false);
+                    } else {
+                        player.displayClientMessage(Component.translatable(
+                                "minestratorhelper.command.sudo_failed")
+                                .withStyle(ChatFormatting.RED), false);
+                    }
+                }));
+        return 1;
     }
 
     private static int powerAction(ClientCommandSourceStack source, String action, String key) {

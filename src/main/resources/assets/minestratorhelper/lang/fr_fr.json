@@ -66,5 +66,7 @@
   "minestratorhelper.command.stop_failed": "Échec de l'arrêt du serveur.",
   "minestratorhelper.command.start_sending": "Envoi de la commande de démarrage à %s...",
   "minestratorhelper.command.start_success": "Le serveur %s démarre !",
-  "minestratorhelper.command.start_failed": "Échec du démarrage du serveur."
+  "minestratorhelper.command.start_failed": "Échec du démarrage du serveur.",
+  "minestratorhelper.command.sudo_sent": "Commande envoyée : %s",
+  "minestratorhelper.command.sudo_failed": "Échec de l'envoi de la commande."
 }
