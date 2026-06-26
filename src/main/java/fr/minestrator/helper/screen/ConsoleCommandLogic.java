@@ -1,7 +1,11 @@
 package fr.minestrator.helper.screen;
 
 import fr.minestrator.helper.api.ApiClient;
+import fr.minestrator.helper.api.ServerLiveData;
+import fr.minestrator.helper.util.AnsiParser;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -14,8 +18,43 @@ public class ConsoleCommandLogic {
     private long statusTime = 0;
     private boolean sending = false;
 
+    private List<List<AnsiParser.Segment>> logLines = new ArrayList<>();
+    private ServerLiveData liveData;
+
     public Integer getServerId() {
         return ServerStateManager.getCurrentServerId();
+    }
+
+    /** Fetches the console logs and parses ANSI colours; runs onUpdate on the calling thread of the future. */
+    public void refreshLogs(Runnable onUpdate) {
+        Integer serverId = getServerId();
+        if (serverId == null) return;
+        ApiClient.fetchConsoleLogs(serverId).thenAccept(lines -> {
+            List<List<AnsiParser.Segment>> parsed = new ArrayList<>();
+            for (String line : lines) {
+                parsed.add(AnsiParser.parse(line));
+            }
+            this.logLines = parsed;
+            if (onUpdate != null) onUpdate.run();
+        });
+    }
+
+    /** Fetches live stats (CPU/RAM/players) for the monitoring header. */
+    public void refreshLive(Runnable onUpdate) {
+        Integer serverId = getServerId();
+        if (serverId == null) return;
+        ApiClient.fetchServerLive(serverId).thenAccept(data -> {
+            this.liveData = data;
+            if (onUpdate != null) onUpdate.run();
+        });
+    }
+
+    public List<List<AnsiParser.Segment>> getLogLines() {
+        return logLines;
+    }
+
+    public ServerLiveData getLiveData() {
+        return liveData;
     }
 
     public String getServerName() {

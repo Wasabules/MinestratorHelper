@@ -1,15 +1,29 @@
 package fr.minestrator.helper.screen;
 
+import fr.minestrator.helper.util.AnsiParser;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.FormattedCharSequence;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Live server console: streams the last console lines (ANSI colours, word-wrapped),
+ * shows a live stats header (CPU / RAM / disk gauges + players), and sends commands.
+ * Polls every ~1.5s.
+ */
 public class ConsoleCommandScreen extends Screen {
     private final ConsoleCommandLogic logic;
     private EditBox commandField;
     private Button sendButton;
+    private int tickCounter = 0;
 
     public ConsoleCommandScreen() {
         super(Component.translatable("minestratorhelper.console.title"));
@@ -18,49 +32,68 @@ public class ConsoleCommandScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
-
-        this.commandField = new EditBox(
-                this.font,
-                centerX - 150,
-                centerY - 10,
-                250,
-                20,
-                Component.translatable("minestratorhelper.console.placeholder")
-        );
+        int inputY = this.height - 28;
+        this.commandField = new EditBox(this.font, 8, inputY, this.width - 90, 20,
+                Component.translatable("minestratorhelper.console.placeholder"));
         this.commandField.setMaxLength(256);
-        this.commandField.setFocused(true);
         this.addRenderableWidget(this.commandField);
+        this.setInitialFocus(this.commandField);
 
-        this.sendButton = Button.builder(
-                Component.translatable("minestratorhelper.console.send"),
-                button -> sendCommand()
-        ).bounds(centerX + 105, centerY - 10, 60, 20).build();
+        this.sendButton = Button.builder(Component.translatable("minestratorhelper.console.send"),
+                button -> sendCommand()).bounds(this.width - 78, inputY, 70, 20).build();
         this.addRenderableWidget(this.sendButton);
 
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("gui.cancel"),
-                button -> this.onClose()
-        ).bounds(centerX - 40, centerY + 20, 80, 20).build());
+        logic.refreshLogs(null);
+        logic.refreshLive(null);
+    }
 
-        this.setInitialFocus(this.commandField);
+    @Override
+    public void tick() {
+        super.tick();
+        tickCounter++;
+        if (tickCounter % 30 == 0) { // ~1.5s at 20 tps
+            logic.refreshLogs(null);
+            logic.refreshLive(null);
+        }
     }
 
     private void sendCommand() {
+        String cmd = this.commandField.getValue();
+        if (cmd == null || cmd.trim().isEmpty()) {
+            return;
+        }
         this.sendButton.active = false;
-        this.sendButton.setMessage(Component.translatable("minestratorhelper.console.sending"));
-
-        logic.sendCommand(
-                this.commandField.getValue(),
+        logic.sendCommand(cmd,
                 () -> this.minecraft.execute(() -> this.commandField.setValue("")),
-                error -> {},
+                error -> {
+                },
                 () -> this.minecraft.execute(() -> {
                     this.sendButton.active = true;
-                    this.sendButton.setMessage(Component.translatable("minestratorhelper.console.send"));
-                })
-        );
+                    logic.refreshLogs(null);
+                }));
     }
+
+    private boolean handleConsoleKey(int keyCode) {
+        if ((keyCode == 257 || keyCode == 335) && this.commandField.isFocused()) {
+            sendCommand();
+            return true;
+        }
+        return false;
+    }
+
+    //? if >=1.21.11 {
+    /*@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        if (handleConsoleKey(event.key())) return true;
+        return super.keyPressed(event);
+    }
+    *///?} else {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (handleConsoleKey(keyCode)) return true;
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    //?}
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
@@ -68,33 +101,45 @@ public class ConsoleCommandScreen extends Screen {
         /*this.renderBackground(context);*/
         super.render(context, mouseX, mouseY, delta);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
-
-        context.fill(centerX - 170, centerY - 50, centerX + 180, centerY + 55, 0xCC000000);
-
-        int borderColor = 0xFF555555;
-        context.fill(centerX - 170, centerY - 50, centerX + 180, centerY - 49, borderColor);
-        context.fill(centerX - 170, centerY + 54, centerX + 180, centerY + 55, borderColor);
-        context.fill(centerX - 170, centerY - 50, centerX - 169, centerY + 55, borderColor);
-        context.fill(centerX + 179, centerY - 50, centerX + 180, centerY + 55, borderColor);
-
-        String titleStr = this.title.getString();
-        context.drawString(this.font, titleStr,
-                centerX - this.font.width(titleStr) / 2, centerY - 40, 0xFFFFFF, true);
+        int areaTop = 52;
+        int areaBottom = this.height - 34;
+        context.fill(4, areaTop - 2, this.width - 4, areaBottom + 2, 0xC0000000);
 
         String serverName = logic.getServerName();
-        if (serverName != null) {
-            String serverText = "Serveur: " + serverName;
-            context.drawString(this.font, serverText,
-                    centerX - this.font.width(serverText) / 2, centerY - 28, 0xAAAAAA, false);
+        String header = "Console — " + (serverName != null ? serverName : "?");
+        context.drawString(this.font, header, 8, 8, 0xFFFFFFFF, true);
+
+        var live = logic.getLiveData();
+        if (live != null) {
+            int barW = 90, gap = 10, bx = 8, by = 20;
+            int playerPct = live.getMaxPlayers() > 0 ? live.getCurrentPlayers() * 100 / live.getMaxPlayers() : 0;
+            Gauges.drawGauge(context, this.font, bx, by, barW, live.getCpuPercent(),
+                    "CPU", live.getCpuPercent() + "%");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap), by, barW, live.getMemoryPercent(),
+                    "RAM", live.getMemoryCurrent() + "/" + live.getMemoryLimit() + " Mo");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap) * 2, by, barW, live.getDiskPercent(),
+                    "Disk", live.getDiskPercent() + "%");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap) * 3, by, barW, playerPct,
+                    "Joueurs", live.getCurrentPlayers() + "/" + live.getMaxPlayers());
         }
 
-        if (logic.shouldShowStatus()) {
-            String statusMessage = Component.translatable(logic.getStatusMessage()).getString();
-            context.drawString(this.font, statusMessage,
-                    centerX - this.font.width(statusMessage) / 2, centerY + 45,
-                    logic.isStatusSuccess() ? 0x55FF55 : 0xFF5555, false);
+        // Logs: ANSI colours, word-wrapped, auto-scrolled to the bottom.
+        int maxWidth = this.width - 16;
+        int lineHeight = this.font.lineHeight + 1;
+        List<FormattedCharSequence> visual = new ArrayList<>();
+        for (List<AnsiParser.Segment> logical : logic.getLogLines()) {
+            MutableComponent comp = Component.empty();
+            for (AnsiParser.Segment seg : logical) {
+                comp.append(Component.literal(seg.text).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(seg.color))));
+            }
+            visual.addAll(this.font.split(comp, maxWidth));
+        }
+        int visibleCount = Math.max(0, (areaBottom - areaTop) / lineHeight);
+        int startIdx = Math.max(0, visual.size() - visibleCount);
+        int y = areaTop;
+        for (int i = startIdx; i < visual.size(); i++) {
+            context.drawString(this.font, visual.get(i), 8, y, 0xFFFFFFFF, false);
+            y += lineHeight;
         }
     }
 

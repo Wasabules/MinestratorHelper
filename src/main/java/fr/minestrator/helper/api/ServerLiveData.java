@@ -52,6 +52,43 @@ public class ServerLiveData {
         return null;
     }
 
+    // ===== Live resource usage (from /live, used by the monitoring panel) =====
+
+    public int getCpuPercent() {
+        return (stats != null && stats.cpu != null) ? stats.cpu.percent : 0;
+    }
+
+    public int getMemoryPercent() {
+        return (stats != null && stats.memory != null) ? stats.memory.percent : 0;
+    }
+
+    public int getMemoryCurrent() {
+        return (stats != null && stats.memory != null) ? stats.memory.current : 0;
+    }
+
+    public int getMemoryLimit() {
+        return (stats != null && stats.memory != null) ? stats.memory.limit : 0;
+    }
+
+    public int getDiskPercent() {
+        return (stats != null && stats.disk != null) ? stats.disk.percent : 0;
+    }
+
+    public int getDiskCurrent() {
+        return (stats != null && stats.disk != null) ? stats.disk.current : 0;
+    }
+
+    public int getDiskLimit() {
+        return (stats != null && stats.disk != null) ? stats.disk.limit : 0;
+    }
+
+    public String[] getPlayerList() {
+        if (stats != null && stats.players != null && stats.players.list != null) {
+            return stats.players.list;
+        }
+        return new String[0];
+    }
+
     public static class Stats {
         private String state;
         private Cpu cpu;

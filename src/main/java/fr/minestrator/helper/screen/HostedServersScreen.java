@@ -47,14 +47,22 @@ public class HostedServersScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonY = this.height - 28;
-        int buttonWidth = 75;
-        int spacing = 4;
-        int startX = this.width / 2 - (buttonWidth * 3 + spacing * 2) / 2 - 80;
+        // Top bar: Back (left) and Settings (right) — always reachable, even on small screens.
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.back"),
+                button -> this.minecraft.setScreen(this.parent)).bounds(6, 6, 50, 20).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("minestratorhelper.servers.config"),
+                button -> this.minecraft.setScreen(new ConfigScreen(this))).bounds(this.width - 76, 6, 70, 20).build());
 
-        this.serverListWidget = new ServerListWidget(this.minecraft, this.width, this.height - 68, 32, 42);
+        // Server list (starts below the title + stats panel area).
+        this.serverListWidget = new ServerListWidget(this.minecraft, this.width, this.height, 72, this.height - 32, 42);
         this.serverListWidget.setBoxes(this.boxes);
         this.addRenderableWidget(this.serverListWidget);
+
+        // Bottom: action buttons for the selected server.
+        int buttonY = this.height - 28;
+        int buttonWidth = 80;
+        int spacing = 4;
+        int startX = this.width / 2 - (buttonWidth * 4 + spacing * 3) / 2;
 
         this.joinButton = Button.builder(Component.translatable("minestratorhelper.servers.join"),
                 button -> joinSelectedServer()).bounds(startX, buttonY, buttonWidth, 20).build();
@@ -74,14 +82,6 @@ public class HostedServersScreen extends Screen {
         this.refreshButton = Button.builder(Component.translatable("minestratorhelper.servers.refresh"),
                 button -> refreshServers()).bounds(startX + (buttonWidth + spacing) * 3, buttonY, buttonWidth, 20).build();
         this.addRenderableWidget(this.refreshButton);
-
-        this.addRenderableWidget(Button.builder(Component.translatable("minestratorhelper.servers.config"),
-                button -> this.minecraft.setScreen(new ConfigScreen(this)))
-                .bounds(startX + (buttonWidth + spacing) * 4, buttonY, buttonWidth, 20).build());
-
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.back"),
-                button -> this.minecraft.setScreen(this.parent))
-                .bounds(startX + (buttonWidth + spacing) * 5, buttonY, 50, 20).build());
 
         refreshServers();
     }
@@ -183,6 +183,35 @@ public class HostedServersScreen extends Screen {
         String titleStr = this.title.getString();
         context.drawString(this.font, titleStr,
                 this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFF, true);
+
+        // Live stats gauges for the selected server (monitoring)
+        ServerListWidget.ServerEntry sel = this.serverListWidget != null
+                ? this.serverListWidget.getSelectedServer() : null;
+        if (sel != null && sel.getLiveData() != null) {
+            var live = sel.getLiveData();
+            int barW = 90, gap = 10;
+            int total = (barW + gap) * 4 - gap;
+            int bx = this.width / 2 - total / 2;
+            int gy = 40;
+            int pad = 8;
+            int px = bx - pad, py = 30, pw = total + pad * 2, ph = Gauges.HEIGHT + 14;
+            context.fill(px, py, px + pw, py + ph, 0xD0141414);
+            Gauges.drawBorder(context, px, py, pw, ph, 0x40FFFFFF);
+            int playerPct = live.getMaxPlayers() > 0 ? live.getCurrentPlayers() * 100 / live.getMaxPlayers() : 0;
+            Gauges.drawGauge(context, this.font, bx, gy, barW, live.getCpuPercent(),
+                    "CPU", live.getCpuPercent() + "%");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap), gy, barW, live.getMemoryPercent(),
+                    "RAM", live.getMemoryCurrent() + "/" + live.getMemoryLimit() + " Mo");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap) * 2, gy, barW, live.getDiskPercent(),
+                    "Disk", live.getDiskPercent() + "%");
+            Gauges.drawGauge(context, this.font, bx + (barW + gap) * 3, gy, barW, playerPct,
+                    "Joueurs", live.getCurrentPlayers() + "/" + live.getMaxPlayers());
+        } else if (!logic.isLoading() && logic.getErrorMessage() == null) {
+            String hint = "Sélectionne un serveur pour voir ses statistiques";
+            context.drawString(this.font, hint,
+                    this.width / 2 - this.font.width(hint) / 2, 44, 0xFF888888, true);
+        }
+
         if (logic.isLoading()) {
             String loadingStr = Component.translatable("minestratorhelper.servers.loading").getString();
             context.drawString(this.font, loadingStr,

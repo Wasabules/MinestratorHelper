@@ -15,11 +15,11 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
 
     private final List<ServerEntry> serverEntries = new ArrayList<>();
 
-    public ServerListWidget(Minecraft client, int width, int height, int y, int itemHeight) {
+    public ServerListWidget(Minecraft client, int screenWidth, int screenHeight, int top, int bottom, int itemHeight) {
         //? if >=1.21 {
-        super(client, width, height, y, itemHeight);
+        super(client, screenWidth, bottom - top, top, itemHeight);
         //?} else
-        /*super(client, width, height, y, y + height, itemHeight);*/
+        /*super(client, screenWidth, screenHeight, top, bottom, itemHeight);*/
     }
 
     public void setBoxes(List<BoxInfo> boxes) {

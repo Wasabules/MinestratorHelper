@@ -247,6 +247,41 @@ public class ApiClient {
         });
     }
 
+    /**
+     * Fetches the last 100 console log lines (with raw ANSI color codes).
+     */
+    public static CompletableFuture<List<String>> fetchConsoleLogs(int serverId) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<String> logs = new ArrayList<>();
+            if (!ModConfig.get().isConfigured()) {
+                return logs;
+            }
+
+            try {
+                String response = doGet(BASE_URL + "/server/" + serverId + "/console/logs");
+                JsonObject json = GSON.fromJson(response, JsonObject.class);
+
+                if (json.has("api")) {
+                    JsonObject api = json.getAsJsonObject("api");
+                    if (api.has("data")) {
+                        JsonObject data = api.getAsJsonObject("data");
+                        if (data.has("logs") && data.get("logs").isJsonArray()) {
+                            for (JsonElement element : data.getAsJsonArray("logs")) {
+                                if (!element.isJsonNull()) {
+                                    logs.add(element.getAsString());
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                MinestratorHelper.LOGGER.debug("Failed to fetch console logs for server " + serverId, e);
+            }
+
+            return logs;
+        });
+    }
+
     private static BoxInfo parseBox(JsonObject obj) {
         try {
             BoxInfo box = new BoxInfo();
