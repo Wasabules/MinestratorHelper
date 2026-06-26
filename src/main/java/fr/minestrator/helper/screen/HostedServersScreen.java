@@ -182,7 +182,7 @@ public class HostedServersScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         String titleStr = this.title.getString();
         context.drawString(this.font, titleStr,
-                this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFF, true);
+                this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFFFF, true);
 
         // Live stats gauges for the selected server (monitoring)
         ServerListWidget.ServerEntry sel = this.serverListWidget != null
@@ -215,11 +215,11 @@ public class HostedServersScreen extends Screen {
         if (logic.isLoading()) {
             String loadingStr = Component.translatable("minestratorhelper.servers.loading").getString();
             context.drawString(this.font, loadingStr,
-                    this.width / 2 - this.font.width(loadingStr) / 2, this.height / 2, 0xAAAAAA, true);
+                    this.width / 2 - this.font.width(loadingStr) / 2, this.height / 2, 0xFFAAAAAA, true);
         } else if (logic.getErrorMessage() != null) {
             String errorStr = Component.translatable(logic.getErrorMessage()).getString();
             context.drawString(this.font, errorStr,
-                    this.width / 2 - this.font.width(errorStr) / 2, this.height / 2, 0xFF5555, true);
+                    this.width / 2 - this.font.width(errorStr) / 2, this.height / 2, 0xFFFF5555, true);
         }
     }
 

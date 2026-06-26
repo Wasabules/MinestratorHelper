@@ -74,21 +74,21 @@ public class ConfigScreen extends Screen {
 
         String titleStr = this.title.getString();
         context.drawString(this.font, titleStr,
-                centerX - this.font.width(titleStr) / 2, 20, 0xFFFFFF, true);
+                centerX - this.font.width(titleStr) / 2, 20, 0xFFFFFFFF, true);
 
         String apiStr = "API: " + logic.getApiBaseUrl();
         context.drawString(this.font, apiStr,
-                centerX - this.font.width(apiStr) / 2, startY - 10, 0x808080, true);
+                centerX - this.font.width(apiStr) / 2, startY - 10, 0xFF808080, true);
 
         String tokenLabel = Component.translatable("minestratorhelper.config.token").getString();
-        context.drawString(this.font, tokenLabel, centerX - 150, startY + 8, 0xA0A0A0, true);
+        context.drawString(this.font, tokenLabel, centerX - 150, startY + 8, 0xFFA0A0A0, true);
 
         String statusMessage = logic.getStatusMessage();
         if (statusMessage != null) {
             String displayMessage = Component.translatable(statusMessage).getString();
             context.drawString(this.font, displayMessage,
                     centerX - this.font.width(displayMessage) / 2, startY + 145,
-                    logic.isStatusSuccess() ? 0x55FF55 : 0xFF5555, true);
+                    logic.isStatusSuccess() ? 0xFF55FF55 : 0xFFFF5555, true);
         }
     }
 

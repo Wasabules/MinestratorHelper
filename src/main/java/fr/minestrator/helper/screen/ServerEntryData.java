@@ -102,18 +102,18 @@ public class ServerEntryData {
 
     public int getStatusColor() {
         if (!server.isPlayable()) {
-            return 0xFF5555;
+            return 0xFFFF5555;
         }
         if (liveData != null) {
             if (liveData.isOnline()) {
-                return 0x55FF55;
+                return 0xFF55FF55;
             } else if (liveData.isStarting() || liveData.isStopping()) {
-                return 0xFFFF55;
+                return 0xFFFFFF55;
             } else {
-                return 0xFF5555;
+                return 0xFFFF5555;
             }
         }
-        return 0x888888;
+        return 0xFF888888;
     }
 
     public String getPlayersText() {
@@ -131,6 +131,6 @@ public class ServerEntryData {
     }
 
     public int getNameColor() {
-        return server.isPlayable() ? 0xFFFFFF : 0xFF5555;
+        return server.isPlayable() ? 0xFFFFFFFF : 0xFFFF5555;
     }
 }
