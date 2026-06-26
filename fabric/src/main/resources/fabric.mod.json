@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "Integration of Minestrator-hosted servers directly in Minecraft",
+  "authors": ["Minestrator"],
+  "contact": {},
+  "license": "All Rights Reserved",
+  "icon": "assets/minestratorhelper/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["fr.minestrator.helper.fabric.MinestratorHelperFabric"]
+  },
+  "depends": {
+    "fabricloader": ">=0.15",
+    "minecraft": "${minecraft}",
+    "fabric-api": "*"
+  }
+}

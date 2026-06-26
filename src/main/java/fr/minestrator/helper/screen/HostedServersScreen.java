@@ -1,0 +1,199 @@
+package fr.minestrator.helper.screen;
+
+import fr.minestrator.helper.api.BoxInfo;
+import fr.minestrator.helper.api.ServerInfo;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class HostedServersScreen extends Screen {
+    private final Screen parent;
+    private final HostedServersLogic logic;
+    private List<BoxInfo> boxes = new ArrayList<>();
+    private ServerListWidget serverListWidget;
+    private Button joinButton;
+    private Button startButton;
+    private Button stopButton;
+    private Button refreshButton;
+
+    public HostedServersScreen(Screen parent) {
+        super(Component.translatable("minestratorhelper.servers.title"));
+        this.parent = parent;
+        this.logic = new HostedServersLogic(
+                this::onBoxesLoaded, this::onError, this::onLoadingStateChanged);
+    }
+
+    private void onBoxesLoaded(List<BoxInfo> boxList) {
+        this.minecraft.execute(() -> {
+            this.boxes = boxList;
+            this.serverListWidget.setBoxes(boxList);
+        });
+    }
+
+    private void onError(String errorKey) {
+        // Error surfaced via logic.getErrorMessage()
+    }
+
+    private void onLoadingStateChanged() {
+        this.minecraft.execute(() -> this.refreshButton.active = !logic.isLoading());
+    }
+
+    @Override
+    protected void init() {
+        int buttonY = this.height - 28;
+        int buttonWidth = 75;
+        int spacing = 4;
+        int startX = this.width / 2 - (buttonWidth * 3 + spacing * 2) / 2 - 80;
+
+        this.serverListWidget = new ServerListWidget(this.minecraft, this.width, this.height - 68, 32, 42);
+        this.serverListWidget.setBoxes(this.boxes);
+        this.addRenderableWidget(this.serverListWidget);
+
+        this.joinButton = Button.builder(Component.translatable("minestratorhelper.servers.join"),
+                button -> joinSelectedServer()).bounds(startX, buttonY, buttonWidth, 20).build();
+        this.joinButton.active = false;
+        this.addRenderableWidget(this.joinButton);
+
+        this.startButton = Button.builder(Component.translatable("minestratorhelper.servers.start"),
+                button -> startSelectedServer()).bounds(startX + buttonWidth + spacing, buttonY, buttonWidth, 20).build();
+        this.startButton.active = false;
+        this.addRenderableWidget(this.startButton);
+
+        this.stopButton = Button.builder(Component.translatable("minestratorhelper.servers.stop"),
+                button -> stopSelectedServer()).bounds(startX + (buttonWidth + spacing) * 2, buttonY, buttonWidth, 20).build();
+        this.stopButton.active = false;
+        this.addRenderableWidget(this.stopButton);
+
+        this.refreshButton = Button.builder(Component.translatable("minestratorhelper.servers.refresh"),
+                button -> refreshServers()).bounds(startX + (buttonWidth + spacing) * 3, buttonY, buttonWidth, 20).build();
+        this.addRenderableWidget(this.refreshButton);
+
+        this.addRenderableWidget(Button.builder(Component.translatable("minestratorhelper.servers.config"),
+                button -> this.minecraft.setScreen(new ConfigScreen(this)))
+                .bounds(startX + (buttonWidth + spacing) * 4, buttonY, buttonWidth, 20).build());
+
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.back"),
+                button -> this.minecraft.setScreen(this.parent))
+                .bounds(startX + (buttonWidth + spacing) * 5, buttonY, 50, 20).build());
+
+        refreshServers();
+    }
+
+    private void refreshServers() {
+        logic.refreshServers(null);
+    }
+
+    private void joinSelectedServer() {
+        ServerListWidget.ServerEntry entry = this.serverListWidget.getSelectedServer();
+        if (entry != null) {
+            connectToServer(entry.getServerInfo());
+        }
+    }
+
+    private void startSelectedServer() {
+        ServerListWidget.ServerEntry entry = this.serverListWidget.getSelectedServer();
+        if (entry == null) return;
+        int serverId = entry.getServerInfo().getId();
+        this.startButton.active = false;
+        this.startButton.setMessage(Component.translatable("minestratorhelper.servers.starting"));
+        logic.startServer(serverId).thenAccept(success -> this.minecraft.execute(() -> {
+            if (success) {
+                this.startButton.setMessage(Component.translatable("minestratorhelper.servers.started"));
+                refreshLiveDataDelayed();
+            } else {
+                this.startButton.setMessage(Component.translatable("minestratorhelper.servers.start_failed"));
+                this.startButton.active = true;
+            }
+        }));
+    }
+
+    private void stopSelectedServer() {
+        ServerListWidget.ServerEntry entry = this.serverListWidget.getSelectedServer();
+        if (entry == null) return;
+        int serverId = entry.getServerInfo().getId();
+        this.stopButton.active = false;
+        this.stopButton.setMessage(Component.translatable("minestratorhelper.servers.stopping"));
+        logic.stopServer(serverId).thenAccept(success -> this.minecraft.execute(() -> {
+            if (success) {
+                this.stopButton.setMessage(Component.translatable("minestratorhelper.servers.stopped"));
+                refreshLiveDataDelayed();
+            } else {
+                this.stopButton.setMessage(Component.translatable("minestratorhelper.servers.stop_failed"));
+                this.stopButton.active = true;
+            }
+        }));
+    }
+
+    private void refreshLiveDataDelayed() {
+        new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+                this.minecraft.execute(() -> {
+                    this.serverListWidget.refreshLiveData();
+                    updateButtonStates();
+                });
+            } catch (InterruptedException ignored) {
+            }
+        }).start();
+    }
+
+    private void connectToServer(ServerInfo server) {
+        logic.connectToServer(server);
+        //? if >=1.21 {
+        ServerData serverData = new ServerData(
+                server.getName(), server.getConnectionAddress(), ServerData.Type.OTHER);
+        ConnectScreen.startConnecting(
+                this, this.minecraft,
+                ServerAddress.parseString(server.getConnectionAddress()),
+                serverData, false, null);
+        //?} else {
+        /*ServerData serverData = new ServerData(
+                server.getName(), server.getConnectionAddress(), false);
+        ConnectScreen.startConnecting(
+                this, this.minecraft,
+                ServerAddress.parseString(server.getConnectionAddress()),
+                serverData, false);
+        *///?}
+    }
+
+    public void updateButtonStates() {
+        ServerListWidget.ServerEntry entry = this.serverListWidget.getSelectedServer();
+        ServerInfo server = entry != null ? entry.getServerInfo() : null;
+        var liveData = entry != null ? entry.getLiveData() : null;
+        HostedServersLogic.ButtonStates states = HostedServersLogic.ButtonStates.calculate(server, liveData);
+        this.joinButton.active = states.joinEnabled;
+        this.startButton.active = states.startEnabled;
+        this.stopButton.active = states.stopEnabled;
+        this.startButton.setMessage(Component.translatable(states.startText));
+        this.stopButton.setMessage(Component.translatable(states.stopText));
+    }
+
+    @Override
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        String titleStr = this.title.getString();
+        context.drawString(this.font, titleStr,
+                this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFF, true);
+        if (logic.isLoading()) {
+            String loadingStr = Component.translatable("minestratorhelper.servers.loading").getString();
+            context.drawString(this.font, loadingStr,
+                    this.width / 2 - this.font.width(loadingStr) / 2, this.height / 2, 0xAAAAAA, true);
+        } else if (logic.getErrorMessage() != null) {
+            String errorStr = Component.translatable(logic.getErrorMessage()).getString();
+            context.drawString(this.font, errorStr,
+                    this.width / 2 - this.font.width(errorStr) / 2, this.height / 2, 0xFF5555, true);
+        }
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
+    }
+}
