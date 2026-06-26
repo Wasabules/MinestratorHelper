@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **client-side Minecraft mod** that integrates Minestrator-hosted servers into the game (a "My Servers" screen with start/stop/join, an in-game console screen, client commands, an F6 keybind). It talks to the Minestrator REST API (`https://mine.sttr.io`) with a Bearer token.
+A **client-side Minecraft mod** that integrates Minestrator-hosted servers into the game:
+- a "My Servers" screen with start/stop/join and live monitoring gauges (CPU/RAM/disk/players);
+- an in-game **live console** (F6): real-time logs with ANSI colours, word-wrap, mouse-wheel + draggable scrollbar, frozen-while-scrolled view, and per-level filter pills (INFO/WARN/ERROR);
+- **client commands** `/reboot`, `/mstop`, `/mstart`, and `/sudo <command>` (runs a console command from chat, with tab-completion of popular commands and online players);
+- an F6 keybind.
+
+It talks to the Minestrator REST API (`https://mine.sttr.io`) with a Bearer token.
 
 It is built as a **single codebase that targets multiple mod loaders (Fabric + NeoForge) and multiple Minecraft versions** from one source tree.
 
@@ -83,13 +89,26 @@ The active Minecraft version (in `stonecutter.gradle.kts`, `stonecutter active "
 
 No tests exist.
 
+## CI & release
+
+- `.github/workflows/build.yml` — on push to `main` / PRs, runs `chiseledBuild` and uploads the jars as a build artifact.
+- `.github/workflows/release.yml` — on a `v*` tag (or manual `workflow_dispatch`), runs `chiseledBuild` and publishes a **GitHub Release** with the 5 distributable jars (`minestratorhelper-<loader>-<modver>+<mc>.jar`; `-sources` jars excluded).
+- Both set up JDK **17 + 21**; Stonecutter/Loom toolchains pick the right one per version (no `org.gradle.java.home` needed on CI).
+- Cut a release: bump `mod.version` in `gradle.properties`, commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+
 ## Handling version differences — Stonecutter `//?`
 
 Because `common` is one source tree compiled against several MC versions (in Mojmap), API differences are bridged with Stonecutter preprocessor comments. The active block is plain code; the inactive block is wrapped in `/* */`; Stonecutter flips them on version switch. Predicate examples in use:
 
-- `//? if >=1.21` — `ObjectSelectionList` ctor (5-arg vs 6-arg top/bottom in 1.20.1); `ServerData`/`ConnectScreen.startConnecting` arg shape.
+- `//? if >=1.21` — `ObjectSelectionList` ctor (5-arg vs 6-arg top/bottom in 1.20.1); `ServerData`/`ConnectScreen.startConnecting` arg shape; `Screen.mouseScrolled(double,double,double,double)` 4-arg (vs 3-arg `(double,double,double)` in 1.20.1).
+- `//? if <1.21` — `Screen.renderBackground(GuiGraphics)` must be called explicitly; `AbstractSelectionList.getScrollbarPosition()` override (default puts the bar mid-screen).
 - `//? if >=1.21.9` — `KeyMapping.Category` (vs `String` category) — note 1.21.11 renames `ResourceLocation` → `net.minecraft.resources.Identifier`.
-- `//? if >=1.21.11` — list entries override `renderContent(GuiGraphics,int,int,boolean,float)` + `getX/getY` (vs the 10-arg `render(...)`); `mouseClicked(MouseButtonEvent, boolean)` (vs `(double,double,int)`).
+- `//? if >=1.21.11` — list entries override `renderContent(GuiGraphics,int,int,boolean,float)` + `getX/getY` (vs the 10-arg `render(...)`); the mouse/key event API moves to event objects: `mouseClicked(MouseButtonEvent, boolean)`, `mouseDragged(MouseButtonEvent, double, double)`, `mouseReleased(MouseButtonEvent)`, `keyPressed(KeyEvent)` (vs the `(double,double,int)` / `(int,int,int)` forms); `GameProfile` becomes a record so `getProfile().name()` replaces `getProfile().getName()` (authlib 9.x).
+
+### Two non-`//?` 1.21.11 / 1.20.1 rendering gotchas (found in testing)
+
+- **1.21.11 invisible text/fills**: `GuiGraphics.drawString`/`fill` no longer force a colour opaque when its alpha byte is 0. A bare `0xRRGGBB` (alpha 0) renders **invisible** on 1.21.11, but was silently opaque on 1.20.1/1.21.1. **Always pass explicit `0xFF` alpha** (`0xFFFFFFFF`, not `0xFFFFFF`); for a helper that returns `0xRRGGBB`, OR it with `0xFF000000` at the draw site. `TextColor.fromRgb(...)` segments are unaffected (alpha comes from the base `drawString` colour).
+- **1.20.1 widget render order**: `AbstractSelectionList` paints top/bottom edge gradients over the area *outside* its bounds, hiding any widget registered *before* it. Register the list **before** any top-bar buttons so they draw on top.
 
 When adding a feature: write it for the active version, `./gradlew :<v>:compileJava`, then switch active to each other version and add `//?` where the compiler reports signature mismatches. Keep shared bodies in a helper method (e.g. `renderRow`) so only the differing signature lives inside the `//?`.
 
@@ -100,5 +119,5 @@ To discover the exact Mojmap signature for a given MC version, inspect the cache
 
 - Bearer token from `ModConfig`; empty token ⇒ `isConfigured()` false ⇒ calls short-circuit.
 - Responses nested under `api.data.*`; `ApiClient` walks them with Gson `JsonObject`. Booleans arrive as integer `0`/`1`.
-- Endpoints: `GET /user/`, `GET /user/{id}/servers`, `GET /server/{id}/live`, `PUT /server/{id}/poweraction` (start/stop/restart/kill), `PUT /server/{id}/command`. User id is fetched once and cached.
+- Endpoints: `GET /user/`, `GET /user/{id}/servers`, `GET /server/{id}/live`, `GET /server/{id}/console/logs` (ANSI log lines for the live console), `PUT /server/{id}/poweraction` (start/stop/restart/kill), `PUT /server/{id}/command`. User id is fetched once and cached.
 - All calls return `CompletableFuture` off-thread; marshal UI updates back with `Minecraft.getInstance().execute(...)`.

@@ -16,10 +16,14 @@ Built from a **single codebase** that targets multiple mod loaders **and** multi
 
 ## Features
 
-- **My Servers** screen (a button added to the multiplayer menu): list your boxes & servers, see live status (online / starting / stopping / offline), start/stop, and join in one click.
-- **In-game console** (default key: **F6**) to send commands to the server you're connected to.
-- **Client commands**: `/reboot`, `/mstop`, `/mstart`.
+- **My Servers** screen (a button added to the multiplayer menu): list your boxes & servers, see live status (online / starting / stopping / offline), **live monitoring gauges** (CPU / RAM / disk / players), start/stop, and join in one click.
+- **Live in-game console** (default key: **F6**): streams the server console in real time with ANSI colours and word-wrap, mouse-wheel + **draggable scrollbar** (the view freezes while you scroll so new lines don't shift it), a "back to bottom" button, and clickable **INFO / WARN / ERROR filter pills**. Send commands from the input at the bottom.
+- **Client commands**: `/reboot`, `/mstop`, `/mstart`, and **`/sudo <command>`** — run any console command from chat, with **tab-completion** of popular commands (`op`, `kick`, `ban`, `gamemode`, …), online players, and gamemodes (e.g. `/sudo op Notch`).
 - **Power buttons** added to the pause menu while connected to a hosted server.
+
+## Download
+
+Download the jar matching your Minecraft version and loader from the [**Releases**](../../releases) page (file name: `minestratorhelper-<loader>-<version>+<mc>.jar`), or build it from source (see below).
 
 ## Setup
 
@@ -43,6 +47,17 @@ To work on a specific version:
 ```
 
 See [CLAUDE.md](CLAUDE.md) for the full architecture, toolchain, and how version differences are handled.
+
+## Releases
+
+Releases are built and published by GitHub Actions. To cut one: bump `mod.version` in `gradle.properties`, commit, then push a tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This runs `chiseledBuild` and attaches all 5 version × loader jars to a new GitHub Release. You can also trigger it manually from the **Actions → Release** tab.
 
 ## License
 
