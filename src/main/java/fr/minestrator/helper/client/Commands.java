@@ -1,6 +1,9 @@
 package fr.minestrator.helper.client;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent.ClientCommandSourceStack;
 import fr.minestrator.helper.api.ApiClient;
@@ -9,6 +12,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Client commands (/reboot, /mstop, /mstart), registered through Architectury
  * so the same code drives Fabric and NeoForge.
@@ -16,6 +24,16 @@ import net.minecraft.network.chat.Component;
 public final class Commands {
     private Commands() {
     }
+
+    /** Common server commands suggested as the first word of /sudo. */
+    private static final List<String> POPULAR_COMMANDS = List.of(
+            "op", "deop", "kick", "ban", "ban-ip", "pardon", "gamemode", "give", "tp", "teleport",
+            "time", "weather", "difficulty", "whitelist", "say", "kill", "effect", "enchant",
+            "xp", "gamerule", "clear", "seed", "list", "msg", "tell", "stop", "save-all");
+    /** Commands whose next argument is a player name (suggested from the local player list). */
+    private static final Set<String> PLAYER_COMMANDS = Set.of(
+            "op", "deop", "kick", "ban", "pardon", "tp", "teleport", "kill", "msg", "tell", "give");
+    private static final List<String> GAMEMODE_MODES = List.of("survival", "creative", "adventure", "spectator");
 
     public static void register() {
         ClientCommandRegistrationEvent.EVENT.register((dispatcher, registry) -> {
@@ -27,6 +45,7 @@ public final class Commands {
                     .executes(ctx -> powerAction(ctx.getSource(), "start", "start")));
             dispatcher.register(ClientCommandRegistrationEvent.literal("sudo")
                     .then(ClientCommandRegistrationEvent.argument("command", StringArgumentType.greedyString())
+                            .suggests(Commands::suggestSudo)
                             .executes(ctx -> sudo(ctx.getSource(), StringArgumentType.getString(ctx, "command")))));
         });
     }
@@ -57,6 +76,51 @@ public final class Commands {
                     }
                 }));
         return 1;
+    }
+
+    /** Suggests popular commands for the first word, then online players (or gamemodes) for later args. */
+    private static CompletableFuture<Suggestions> suggestSudo(CommandContext<ClientCommandSourceStack> ctx,
+                                                             SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining();
+        int firstSpace = remaining.indexOf(' ');
+        if (firstSpace < 0) {
+            String prefix = remaining.toLowerCase();
+            for (String cmd : POPULAR_COMMANDS) {
+                if (cmd.startsWith(prefix)) builder.suggest(cmd);
+            }
+            return builder.buildFuture();
+        }
+
+        String first = remaining.substring(0, firstSpace).toLowerCase();
+        int lastSpace = remaining.lastIndexOf(' ');
+        String token = remaining.substring(lastSpace + 1).toLowerCase();
+        SuggestionsBuilder offset = builder.createOffset(builder.getStart() + lastSpace + 1);
+        if (PLAYER_COMMANDS.contains(first)) {
+            for (String name : onlinePlayers()) {
+                if (name.toLowerCase().startsWith(token)) offset.suggest(name);
+            }
+        } else if (first.equals("gamemode")) {
+            for (String mode : GAMEMODE_MODES) {
+                if (mode.startsWith(token)) offset.suggest(mode);
+            }
+        }
+        return offset.buildFuture();
+    }
+
+    /** Online player names from the local client player list (no API call). */
+    private static List<String> onlinePlayers() {
+        List<String> names = new ArrayList<>();
+        var conn = Minecraft.getInstance().getConnection();
+        if (conn != null) {
+            for (var info : conn.getOnlinePlayers()) {
+                //? if >=1.21.11 {
+                /*String name = info.getProfile().name();*/
+                //?} else
+                String name = info.getProfile().getName();
+                if (name != null) names.add(name);
+            }
+        }
+        return names;
     }
 
     private static int powerAction(ClientCommandSourceStack source, String action, String key) {
