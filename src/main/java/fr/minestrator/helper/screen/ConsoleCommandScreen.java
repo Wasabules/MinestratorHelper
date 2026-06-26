@@ -1,6 +1,7 @@
 package fr.minestrator.helper.screen;
 
 import fr.minestrator.helper.util.AnsiParser;
+import fr.minestrator.helper.util.LogLine;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -29,8 +30,10 @@ public class ConsoleCommandScreen extends Screen {
 
     private int scrollOffset = 0; // lines scrolled up from the bottom (0 = follow latest)
     private boolean draggingScrollbar = false;
-    private List<List<AnsiParser.Segment>> frozen; // snapshot shown while scrolled up
+    private List<LogLine> frozen; // snapshot shown while scrolled up
     private int lastAreaTop, lastAreaBottom, lastMaxScroll;
+
+    private boolean showInfo = true, showWarn = true, showError = true;
 
     public ConsoleCommandScreen() {
         super(Component.translatable("minestratorhelper.console.title"));
@@ -51,7 +54,7 @@ public class ConsoleCommandScreen extends Screen {
         this.addRenderableWidget(this.sendButton);
 
         this.downButton = Button.builder(Component.literal("↓"),
-                button -> jumpToBottom()).bounds(this.width - 36, inputY - 24, 20, 20).build();
+                button -> jumpToBottom()).bounds(this.width - 36, inputY - 32, 20, 20).build();
         this.downButton.visible = false;
         this.addRenderableWidget(this.downButton);
 
@@ -150,6 +153,7 @@ public class ConsoleCommandScreen extends Screen {
     //? if >=1.21.11 {
     /*@Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubled) {
+        if (clickFilter(event.x(), event.y())) return true;
         if (scrollbarTo(event.x(), event.y())) { draggingScrollbar = true; return true; }
         return super.mouseClicked(event, doubled);
     }
@@ -166,6 +170,7 @@ public class ConsoleCommandScreen extends Screen {
     *///?} else {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        if (clickFilter(mx, my)) return true;
         if (scrollbarTo(mx, my)) { draggingScrollbar = true; return true; }
         return super.mouseClicked(mx, my, button);
     }
@@ -215,15 +220,18 @@ public class ConsoleCommandScreen extends Screen {
         } else {
             frozen = null;
         }
-        List<List<AnsiParser.Segment>> source = frozen != null ? frozen : logic.getLogLines();
+        List<LogLine> source = frozen != null ? frozen : logic.getLogLines();
 
-        // Logs: ANSI colours, word-wrapped, scrollable, clipped to the log area.
+        // Logs: ANSI colours, word-wrapped, level-filtered, scrollable, clipped to the log area.
         int maxWidth = this.width - 22; // leave room for the scrollbar
         int lineHeight = this.font.lineHeight + 1;
         List<FormattedCharSequence> visual = new ArrayList<>();
-        for (List<AnsiParser.Segment> logical : source) {
+        for (LogLine logical : source) {
+            if (!isShown(logical.level)) {
+                continue;
+            }
             MutableComponent comp = Component.empty();
-            for (AnsiParser.Segment seg : logical) {
+            for (AnsiParser.Segment seg : logical.segments) {
                 comp.append(Component.literal(seg.text).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(seg.color))));
             }
             visual.addAll(this.font.split(comp, maxWidth));
@@ -258,6 +266,69 @@ public class ConsoleCommandScreen extends Screen {
 
         // "Back to bottom" button appears only while scrolled up.
         this.downButton.visible = scrollOffset > 0;
+
+        // Level filter pills + their tooltip (drawn last so they sit on top).
+        drawFilters(context, mouseX, mouseY);
+    }
+
+    private boolean isShown(int level) {
+        switch (level) {
+            case LogLine.INFO: return showInfo;
+            case LogLine.WARN: return showWarn;
+            case LogLine.ERROR: return showError;
+            default: return true; // OTHER lines are always shown
+        }
+    }
+
+    // ----- Level filter pills (top-right inside the log block) -----
+    private static final int FILTER_SIZE = 10;
+
+    private int filterX(int idx) {
+        return this.width - 52 + idx * (FILTER_SIZE + 4);
+    }
+
+    private int filterY() {
+        return 54;
+    }
+
+    private boolean filterActive(int i) {
+        return i == 0 ? showInfo : i == 1 ? showWarn : showError;
+    }
+
+    private boolean clickFilter(double mx, double my) {
+        for (int i = 0; i < 3; i++) {
+            int x = filterX(i), y = filterY();
+            if (mx >= x && mx <= x + FILTER_SIZE && my >= y && my <= y + FILTER_SIZE) {
+                if (i == 0) showInfo = !showInfo;
+                else if (i == 1) showWarn = !showWarn;
+                else showError = !showError;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void drawFilters(GuiGraphics ctx, int mouseX, int mouseY) {
+        int[] colors = {0xAAAAAA, 0xE08000, 0xE05555}; // grey / orange / red
+        String[] names = {"INFO", "WARN", "ERROR"};
+        ctx.fill(filterX(0) - 3, filterY() - 3, filterX(2) + FILTER_SIZE + 3, filterY() + FILTER_SIZE + 3, 0xC0000000);
+        String tip = null;
+        for (int i = 0; i < 3; i++) {
+            int x = filterX(i), y = filterY();
+            boolean on = filterActive(i);
+            ctx.fill(x, y, x + FILTER_SIZE, y + FILTER_SIZE, on ? (0xFF000000 | colors[i]) : 0xFF3A3A3A);
+            Gauges.drawBorder(ctx, x, y, FILTER_SIZE, FILTER_SIZE, on ? 0x80FFFFFF : 0x40FFFFFF);
+            if (mouseX >= x && mouseX <= x + FILTER_SIZE && mouseY >= y && mouseY <= y + FILTER_SIZE) {
+                tip = names[i] + (on ? " enabled" : " disabled");
+            }
+        }
+        if (tip != null) {
+            int w = this.font.width(tip);
+            int tx = mouseX - w - 8, ty = mouseY - this.font.lineHeight - 6;
+            ctx.fill(tx - 3, ty - 3, tx + w + 3, ty + this.font.lineHeight + 3, 0xF0100010);
+            Gauges.drawBorder(ctx, tx - 3, ty - 3, w + 6, this.font.lineHeight + 6, 0x60FFFFFF);
+            ctx.drawString(this.font, tip, tx, ty, 0xFFFFFFFF, false);
+        }
     }
 
     @Override

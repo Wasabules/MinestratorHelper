@@ -3,6 +3,7 @@ package fr.minestrator.helper.screen;
 import fr.minestrator.helper.api.ApiClient;
 import fr.minestrator.helper.api.ServerLiveData;
 import fr.minestrator.helper.util.AnsiParser;
+import fr.minestrator.helper.util.LogLine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class ConsoleCommandLogic {
     private long statusTime = 0;
     private boolean sending = false;
 
-    private List<List<AnsiParser.Segment>> logLines = new ArrayList<>();
+    private List<LogLine> logLines = new ArrayList<>();
     private ServerLiveData liveData;
 
     public Integer getServerId() {
@@ -30,9 +31,9 @@ public class ConsoleCommandLogic {
         Integer serverId = getServerId();
         if (serverId == null) return;
         ApiClient.fetchConsoleLogs(serverId).thenAccept(lines -> {
-            List<List<AnsiParser.Segment>> parsed = new ArrayList<>();
+            List<LogLine> parsed = new ArrayList<>();
             for (String line : lines) {
-                parsed.add(AnsiParser.parse(line));
+                parsed.add(new LogLine(AnsiParser.parse(line), LogLine.detectLevel(line)));
             }
             this.logLines = parsed;
             if (onUpdate != null) onUpdate.run();
@@ -49,7 +50,7 @@ public class ConsoleCommandLogic {
         });
     }
 
-    public List<List<AnsiParser.Segment>> getLogLines() {
+    public List<LogLine> getLogLines() {
         return logLines;
     }
 
