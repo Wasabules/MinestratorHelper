@@ -98,7 +98,10 @@ public class ConfigScreen extends Screen {
 
         String statusMessage = logic.getStatusMessage();
         if (statusMessage != null) {
-            String displayMessage = Component.translatable(statusMessage).getString();
+            String statusArg = logic.getStatusArg();
+            String displayMessage = statusArg != null
+                    ? Component.translatable(statusMessage, statusArg).getString()
+                    : Component.translatable(statusMessage).getString();
             Gfx.text(context, this.font, displayMessage,
                     centerX - this.font.width(displayMessage) / 2, startY + 145,
                     logic.isStatusSuccess() ? 0xFF55FF55 : 0xFFFF5555, true);

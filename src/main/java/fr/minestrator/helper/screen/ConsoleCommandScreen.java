@@ -62,6 +62,12 @@ public class ConsoleCommandScreen extends Screen {
         this.downButton.visible = false;
         this.addRenderableWidget(this.downButton);
 
+        // Top-right shortcut to the server list (e.g. to pin a different server for F6).
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("minestratorhelper.button.my_servers"),
+                button -> this.minecraft.setScreen(new HostedServersScreen(this)))
+                .bounds(this.width - 88, 6, 80, 20).build());
+
         logic.refreshLogs(null);
         logic.refreshLive(null);
     }

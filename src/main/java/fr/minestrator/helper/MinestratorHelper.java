@@ -4,6 +4,7 @@ import fr.minestrator.helper.client.Commands;
 import fr.minestrator.helper.client.KeyBinds;
 import fr.minestrator.helper.client.ScreenButtons;
 import fr.minestrator.helper.config.ModConfig;
+import fr.minestrator.helper.screen.ServerHud;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,5 +25,6 @@ public final class MinestratorHelper {
         Commands.register();
         KeyBinds.register();
         ScreenButtons.register();
+        ServerHud.register();
     }
 }

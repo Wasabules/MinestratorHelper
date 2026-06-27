@@ -23,7 +23,7 @@ public class ConsoleCommandLogic {
     private ServerLiveData liveData;
 
     public Integer getServerId() {
-        return ServerStateManager.getCurrentServerId();
+        return ServerStateManager.getEffectiveServerId();
     }
 
     /** Fetches the console logs and parses ANSI colours; runs onUpdate on the calling thread of the future. */
@@ -59,7 +59,7 @@ public class ConsoleCommandLogic {
     }
 
     public String getServerName() {
-        return ServerStateManager.getCurrentServerName();
+        return ServerStateManager.getEffectiveServerName();
     }
 
     public boolean isOnHostedServer() {

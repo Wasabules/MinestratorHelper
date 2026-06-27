@@ -20,6 +20,9 @@
   "minestratorhelper.servers.start_failed": "Failed",
   "minestratorhelper.servers.stop_failed": "Failed",
   "minestratorhelper.servers.refresh": "Refresh",
+  "minestratorhelper.servers.pin": "Pin F6",
+  "minestratorhelper.servers.unpin": "Unpin F6",
+  "minestratorhelper.servers.pinned_to": "F6 → %s",
   "minestratorhelper.servers.config": "Settings",
   "minestratorhelper.servers.loading": "Loading servers...",
   "minestratorhelper.servers.no_servers": "No servers found",
@@ -46,8 +49,10 @@
   "minestratorhelper.status.stopping": "Stopping...",
 
   "minestratorhelper.key.category": "Minestrator Helper",
+  "key.category.minestratorhelper.keys": "Minestrator Helper",
   "key.categories.minestratorhelper.keys": "Minestrator Helper",
   "minestratorhelper.key.console": "Open console",
+  "minestratorhelper.key.hud": "Toggle server overlay",
 
   "minestratorhelper.console.title": "Server Console",
   "minestratorhelper.console.placeholder": "Enter a command...",
