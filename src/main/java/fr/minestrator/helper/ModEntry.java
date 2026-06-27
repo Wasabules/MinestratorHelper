@@ -7,8 +7,8 @@ package fr.minestrator.helper;
 import net.fabricmc.api.ClientModInitializer;
 //?} else {
 /*import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.Mod;*/
-//?}
+import net.neoforged.fml.common.Mod;
+*///?}
 
 //? if fabric {
 public final class ModEntry implements ClientModInitializer {
@@ -23,5 +23,5 @@ public final class ModEntry {
     public ModEntry() {
         MinestratorHelper.init();
     }
-}*/
-//?}
+}
+*///?}
