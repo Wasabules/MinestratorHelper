@@ -123,18 +123,18 @@ public class ConsoleCommandScreen extends Screen {
     }
 
     //? if >=1.21.11 {
-    /*@Override
+    @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
         if (handleConsoleKey(event.key())) return true;
         return super.keyPressed(event);
     }
-    *///?} else {
-    @Override
+    //?} else {
+    /*@Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (handleConsoleKey(keyCode)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
-    //?}
+    *///?}
 
     //? if >=1.21 {
     @Override
@@ -151,7 +151,7 @@ public class ConsoleCommandScreen extends Screen {
     *///?}
 
     //? if >=1.21.11 {
-    /*@Override
+    @Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubled) {
         if (clickFilter(event.x(), event.y())) return true;
         if (scrollbarTo(event.x(), event.y())) { draggingScrollbar = true; return true; }
@@ -167,8 +167,8 @@ public class ConsoleCommandScreen extends Screen {
         if (draggingScrollbar) { draggingScrollbar = false; return true; }
         return super.mouseReleased(event);
     }
-    *///?} else {
-    @Override
+    //?} else {
+    /*@Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (clickFilter(mx, my)) return true;
         if (scrollbarTo(mx, my)) { draggingScrollbar = true; return true; }
@@ -184,7 +184,7 @@ public class ConsoleCommandScreen extends Screen {
         if (draggingScrollbar) { draggingScrollbar = false; return true; }
         return super.mouseReleased(mx, my, button);
     }
-    //?}
+    *///?}
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {

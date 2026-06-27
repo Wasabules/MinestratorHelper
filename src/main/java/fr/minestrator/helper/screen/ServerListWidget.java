@@ -86,17 +86,17 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
 
         //? if >=1.21.11 {
-        /*@Override
+        @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, getX(), getY(), getWidth(), getHeight());
         }
-        *///?} else {
-        @Override
+        //?} else {
+        /*@Override
         public void render(GuiGraphics context, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, left, top, width, height);
         }
-        //?}
+        *///?}
 
         private void renderRow(GuiGraphics context, int x, int y, int w, int h) {
             context.fill(x, y, x + w, y + h, 0x60404040);
@@ -114,16 +114,16 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
 
         //? if >=1.21.11 {
-        /*@Override
+        @Override
         public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubled) {
             return false;
         }
-        *///?} else {
-        @Override
+        //?} else {
+        /*@Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return false;
         }
-        //?}
+        *///?}
 
         @Override
         public Component getNarration() {
@@ -158,17 +158,17 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
 
         //? if >=1.21.11 {
-        /*@Override
+        @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, getX(), getY(), getWidth());
         }
-        *///?} else {
-        @Override
+        //?} else {
+        /*@Override
         public void render(GuiGraphics context, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, left, top, width);
         }
-        //?}
+        *///?}
 
         private void renderRow(GuiGraphics context, int x, int y, int w) {
             int indent = 15;
@@ -206,18 +206,18 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
 
         //? if >=1.21.11 {
-        /*@Override
+        @Override
         public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubled) {
             ServerListWidget.this.setSelected(this);
             return true;
         }
-        *///?} else {
-        @Override
+        //?} else {
+        /*@Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             ServerListWidget.this.setSelected(this);
             return true;
         }
-        //?}
+        *///?}
 
         @Override
         public Component getNarration() {
