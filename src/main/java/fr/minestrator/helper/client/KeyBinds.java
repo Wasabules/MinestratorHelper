@@ -20,15 +20,15 @@ public final class KeyBinds {
 
     public static void register() {
         //? if >=1.21.9 {
-        /*KeyMapping.Category category = KeyMapping.Category.register(
+        KeyMapping.Category category = KeyMapping.Category.register(
                 net.minecraft.resources.Identifier.fromNamespaceAndPath("minestratorhelper", "keys"));
         consoleKey = new KeyMapping("minestratorhelper.key.console", GLFW.GLFW_KEY_F6, category);
-        *///?} else {
-        consoleKey = new KeyMapping(
+        //?} else {
+        /*consoleKey = new KeyMapping(
                 "minestratorhelper.key.console",
                 GLFW.GLFW_KEY_F6,
                 "minestratorhelper.key.category");
-        //?}
+        *///?}
         KeyMappingRegistry.register(consoleKey);
         ClientTickEvent.CLIENT_POST.register(KeyBinds::onTick);
     }

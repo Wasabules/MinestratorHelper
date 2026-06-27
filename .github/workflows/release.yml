@@ -24,13 +24,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17 + 21
+      - name: Set up JDKs 17 + 21 + 25 (Gradle runs on 25 for ModStitch)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: |
             17
             21
+            25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -44,7 +45,7 @@ jobs:
       - name: Collect distributable jars
         run: |
           mkdir -p release-jars
-          find build/libs -name '*.jar' ! -name '*-sources.jar' -exec cp {} release-jars/ \;
+          find versions -path '*/build/libs/*.jar' ! -name '*-sources.jar' ! -name '*-dev*.jar' -exec cp {} release-jars/ \;
           echo "Collected jars:"
           ls -1 release-jars
 

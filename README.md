@@ -33,24 +33,27 @@ Download the jar matching your Minecraft version and loader from the [**Releases
 
 ## Building from source
 
-Requires **JDK 21**. The project uses [Stonecutter](https://stonecutter.kikugie.dev/) for multi-version and [Architectury](https://docs.architectury.dev/) for multi-loader.
+Requires **JDK 25** (the Gradle daemon runs on it; JDK 17 & 21 are also used as toolchains for the older lines). The project uses [Stonecutter](https://stonecutter.kikugie.dev/) for multi-version × multi-loader and [ModStitch](https://github.com/isXander/modstitch) to drive the official Fabric Loom + NeoForge ModDevGradle toolchains; [Architectury API](https://docs.architectury.dev/) is kept as a runtime library.
 
 ```bash
-./gradlew chiseledBuild        # build every version × loader → build/libs/<version>/<loader>/
+# Build every version × loader → versions/<mc>-<loader>/build/libs/
+./gradlew chiseledBuild
 ```
 
-To work on a specific version:
+To work on a specific node (`<mc>-<loader>`):
 
 ```bash
-./gradlew "Set active project to 1.21.1"   # 1.20.1 | 1.21.1 | 1.21.11
-./gradlew runActiveClientFabric            # or runActiveClientNeoforge
+./gradlew "Set active project to 1.21.11-fabric"
+./gradlew :1.21.11-fabric:runClient        # or :1.21.1-neoforge:runClient
 ```
+
+> All Gradle commands must run on JDK 25, e.g. `-Dorg.gradle.java.home=…/jdk-25…`.
 
 See [CLAUDE.md](CLAUDE.md) for the full architecture, toolchain, and how version differences are handled.
 
 ## Releases
 
-Releases are built and published by GitHub Actions. To cut one: bump `mod.version` in `gradle.properties`, commit, then push a tag:
+Releases are built and published by GitHub Actions. To cut one: bump `mod_version` in `gradle.properties`, commit, then push a tag:
 
 ```bash
 git tag v1.0.0

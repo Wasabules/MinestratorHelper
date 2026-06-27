@@ -114,9 +114,9 @@ public final class Commands {
         if (conn != null) {
             for (var info : conn.getOnlinePlayers()) {
                 //? if >=1.21.11 {
-                /*String name = info.getProfile().name();
-                *///?} else
-                String name = info.getProfile().getName();
+                String name = info.getProfile().name();
+                //?} else
+                //String name = info.getProfile().getName();
                 if (name != null) names.add(name);
             }
         }
