@@ -52,7 +52,7 @@ public final class Commands {
 
     /** /sudo <command> — sends a raw command to the hosted server console via the API. */
     private static int sudo(ClientCommandSourceStack source, String command) {
-        Integer serverId = ServerStateManager.getCurrentServerId();
+        Integer serverId = ServerStateManager.getEffectiveServerId();
         if (serverId == null) {
             source.arch$sendFailure(Component.translatable("minestratorhelper.command.not_on_hosted")
                     .withStyle(ChatFormatting.RED));
@@ -124,8 +124,8 @@ public final class Commands {
     }
 
     private static int powerAction(ClientCommandSourceStack source, String action, String key) {
-        Integer serverId = ServerStateManager.getCurrentServerId();
-        String serverName = ServerStateManager.getCurrentServerName();
+        Integer serverId = ServerStateManager.getEffectiveServerId();
+        String serverName = ServerStateManager.getEffectiveServerName();
 
         if (serverId == null) {
             source.arch$sendFailure(Component.translatable("minestratorhelper.command.not_on_hosted")

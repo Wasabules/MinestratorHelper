@@ -23,7 +23,7 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         //? if >=1.21 {
         super(client, screenWidth, bottom - top, top, itemHeight);
         //?} else
-        /*super(client, screenWidth, screenHeight, top, bottom, itemHeight);*/
+        //super(client, screenWidth, screenHeight, top, bottom, itemHeight);
     }
 
     public void setBoxes(List<BoxInfo> boxes) {

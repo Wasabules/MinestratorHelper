@@ -204,7 +204,7 @@ public class ConsoleCommandScreen extends Screen {
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
     //?}
         //? if <1.21
-        /*this.renderBackground(context);*/
+        //this.renderBackground(context);
         //? if >=26.1 {
         /*super.extractRenderState(context, mouseX, mouseY, delta);
         *///?} else {
