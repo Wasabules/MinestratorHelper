@@ -20,6 +20,9 @@ val javaRelease = when {
 
 version = property("mod_version") as String
 base.archivesName.set("minestratorhelper-$loader-$minecraft")
+// Drop the mod version from the jar file name so release download links stay stable,
+// e.g. .../releases/latest/download/minestratorhelper-fabric-1.21.11.jar always resolves.
+tasks.withType<AbstractArchiveTask>().configureEach { archiveVersion.set("") }
 
 modstitch {
     minecraftVersion = minecraft

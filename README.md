@@ -20,17 +20,32 @@ Built from a **single codebase** that targets multiple mod loaders **and** multi
 - **My Servers** screen (a button added to the multiplayer menu): list your boxes & servers, see live status (online / starting / stopping / offline), **live monitoring gauges** (CPU / RAM / disk / players), start/stop, and join in one click.
 - **Live in-game console** (default key: **F6**): streams the server console in real time with ANSI colours and word-wrap, mouse-wheel + **draggable scrollbar** (the view freezes while you scroll so new lines don't shift it), a "back to bottom" button, and clickable **INFO / WARN / ERROR filter pills**. Send commands from the input at the bottom.
 - **Client commands**: `/reboot`, `/mstop`, `/mstart`, and **`/sudo <command>`** — run any console command from chat, with **tab-completion** of popular commands (`op`, `kick`, `ban`, `gamemode`, …), online players, and gamemodes (e.g. `/sudo op Notch`).
-- **Power buttons** added to the pause menu while connected to a hosted server.
+- **Power buttons** in the pause menu (restart / stop the targeted server).
+- **Server pinning (proxy-safe)** — choose which hosted server the console, overlay, pause buttons **and** chat commands act on, via **My Servers → "Pin F6"**. Essential behind a Bungee/Velocity proxy, where the connected IP is the proxy and not the backend, so auto-detection can't tell which server you're really on.
+- **In-game stats overlay** (keybind, **F7** by default, rebindable): toggle a compact CPU / RAM / players overlay for the targeted server without opening the console.
+- **"My Servers" from the pause menu** (always available), plus a shortcut to it in the top-right of the console screen.
 
 ## Download
 
-Download the jar matching your Minecraft version and loader from the [**Releases**](../../releases) page (file name: `minestratorhelper-<loader>-<version>+<mc>.jar`), or build it from source (see below).
+Pick the jar for **your Minecraft version and loader** — these links always serve the newest release:
+
+| Minecraft | Fabric | NeoForge |
+|-----------|--------|----------|
+| 1.20.1  | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-fabric-1.20.1.jar) | — |
+| 1.21.1  | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-fabric-1.21.1.jar) | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-neoforge-1.21.1.jar) |
+| 1.21.11 | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-fabric-1.21.11.jar) | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-neoforge-1.21.11.jar) |
+| 26.1.2  | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-fabric-26.1.2.jar) | [⬇ download](https://github.com/Wasabules/MinestratorHelper/releases/latest/download/minestratorhelper-neoforge-26.1.2.jar) |
+
+Or browse every file on the [Releases](../../releases) page. **You also need the dependencies** — see Setup just below.
 
 ## Setup
 
-1. Install [Fabric Loader](https://fabricmc.net/) (+ [Fabric API](https://modrinth.com/mod/fabric-api)) **or** [NeoForge](https://neoforged.net/), and [Architectury API](https://modrinth.com/mod/architectury-api).
-2. Drop the matching jar into your `mods/` folder.
-3. In game, open **My Servers → Config** and paste your Minestrator API Bearer token.
+1. Install your loader:
+   - **Fabric** → [Fabric Loader](https://fabricmc.net/) **and** [Fabric API](https://modrinth.com/mod/fabric-api)
+   - **NeoForge** → [NeoForge](https://neoforged.net/)
+2. Install **[Architectury API](https://modrinth.com/mod/architectury-api)** — **required on both loaders** (the mod won't load without it; pick the build matching your MC version + loader).
+3. Drop the matching mod jar (from **Download** above) into your `mods/` folder.
+4. In game, open **My Servers → Config** and paste your Minestrator API token.
 
 ## Building from source
 
@@ -61,7 +76,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-This runs `chiseledBuild` and attaches all 5 version × loader jars to a new GitHub Release. You can also trigger it manually from the **Actions → Release** tab.
+This runs `chiseledBuild` and attaches all 7 version × loader jars to a new GitHub Release. You can also trigger it manually from the **Actions → Release** tab.
 
 ## License
 

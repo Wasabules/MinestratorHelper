@@ -5,10 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A **client-side Minecraft mod** that integrates Minestrator-hosted servers into the game:
-- a "My Servers" screen with start/stop/join and live monitoring gauges (CPU/RAM/disk/players);
+- a "My Servers" screen (also opened from the pause menu) with start/stop/join, live monitoring gauges (CPU/RAM/disk/players), and a **"Pin F6"** action fixing which hosted server the mod targets — proxy-safe (Bungee/Velocity): the connected IP is the proxy, not the backend, so auto-detection alone can't tell which server you're really on;
 - an in-game **live console** (F6): real-time logs with ANSI colours, word-wrap, mouse-wheel + draggable scrollbar, frozen-while-scrolled view, and per-level filter pills (INFO/WARN/ERROR);
+- an in-game **stats overlay** (F7 keybind) showing the targeted server's CPU/RAM/players, drawn via Architectury `RENDER_HUD` (`ServerHud`);
 - **client commands** `/reboot`, `/mstop`, `/mstart`, and `/sudo <command>` (runs a console command from chat, with tab-completion of popular commands and online players);
-- an F6 keybind.
+- F6/F7 keybinds.
+
+Everything targets `ServerStateManager.getEffectiveServerId()` — the pinned server if set, else the one auto-detected on Join.
 
 It talks to the Minestrator REST API (`https://mine.sttr.io`) with a Bearer token.
 
@@ -78,7 +81,7 @@ JDK="-Dorg.gradle.java.home=C:/Program Files/Eclipse Adoptium/jdk-25.0.3.9-hotsp
 # Switch the active node (rewrites //? for version AND loader)
 ./gradlew "Set active project to 1.21.11-fabric" $JDK    # or 1.21.1-neoforge, 1.20.1-fabric, …
 
-# Build one node → versions/<node>/build/libs/minestratorhelper-<loader>-<modver>+<mc>.jar
+# Build one node → versions/<node>/build/libs/minestratorhelper-<loader>-<mc>.jar (version stripped from the name for stable download links)
 ./gradlew :1.21.11-fabric:build $JDK
 
 # Build EVERY node (all version × loader)
