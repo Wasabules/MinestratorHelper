@@ -18,8 +18,8 @@ val javaRelease = when {
     else -> 21                                     // 1.21.x is Java 21
 }
 
-version = "${property("mod_version")}+$minecraft"
-base.archivesName.set("minestratorhelper-$loader")
+version = property("mod_version") as String
+base.archivesName.set("minestratorhelper-$loader-$minecraft")
 
 modstitch {
     minecraftVersion = minecraft

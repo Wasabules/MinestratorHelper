@@ -37,8 +37,8 @@ public final class KeyBinds {
         while (consoleKey.consumeClick()) {
             if (!ServerStateManager.isOnHostedServer()) {
                 if (client.player != null) {
-                    client.player.displayClientMessage(
-                            Component.translatable("minestratorhelper.command.not_on_hosted"), true);
+                    ChatFeedback.send(client.player,
+                            Component.translatable("minestratorhelper.command.not_on_hosted"));
                 }
                 return;
             }

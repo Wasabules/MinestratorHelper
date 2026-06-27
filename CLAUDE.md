@@ -55,7 +55,7 @@ minestratorhelper/
 
 There are **no `fabric/` / `neoforge/` loader modules and no `buildSrc/`** (removed in the ModStitch migration). The loader entrypoints are merged into `ModEntry.java` via `//?`.
 
-Matrix: **1.20.1 = Fabric only** (NeoForge starts at MC 1.20.2); **1.21.1 and 1.21.11 = Fabric + NeoForge**. **26.1.2 nodes exist but are commented out in `settings.gradle.kts`** (phase 2 — see "26.1 rendering" below).
+Matrix: **1.20.1 = Fabric only** (NeoForge starts at MC 1.20.2); **1.21.1, 1.21.11 and 26.1.2 = Fabric + NeoForge**.
 
 ### Architecture pattern
 
@@ -114,13 +114,15 @@ No tests exist.
 - **1.21.11 invisible text/fills**: `GuiGraphics.drawString`/`fill` no longer force opaque when a colour's alpha byte is 0. A bare `0xRRGGBB` renders **invisible** on 1.21.11 (was opaque on 1.20.1/1.21.1). Always pass explicit `0xFF` alpha (`0xFFFFFFFF`); OR helper colours with `0xFF000000` at the draw site.
 - **1.20.1 widget render order**: `AbstractSelectionList` paints edge gradients over the area outside its bounds, hiding widgets registered before it. Register the list **before** top-bar buttons.
 
-### 26.1 rendering refactor (phase 2 — why 26.1.2 nodes are disabled)
+### 26.1 rendering refactor (ported with `//? >=26.1`)
 
-ModStitch resolves 26.1.2 fine, but Mojang refactored GUI rendering in 26.1, so the code needs a `//? >=26.1` port across the screen classes:
-- `GuiGraphics` → `net.minecraft.client.gui.GuiGraphicsExtractor`
-- `Screen.render(GuiGraphics,…)` → `extractRenderState(GuiGraphicsExtractor,…)` (immediate → retained/extract model)
-- `ctx.drawString(...)` → `ctx.text(...)`
-- `fill`, `enableScissor`, `disableScissor`, `pose()` still exist.
+Mojang refactored GUI rendering in 26.1; bridged across the screen classes:
+- `GuiGraphics` → `GuiGraphicsExtractor` (import `//?`).
+- `Screen.render(GuiGraphics,…)` → `extractRenderState(GuiGraphicsExtractor,…)` (immediate → retained "extract" model); `super.render` → `super.extractRenderState`. Structured as 3 sequential `//?` (signature / `<1.21` renderBackground / super-call) so the body stays common.
+- list entries `renderContent(GuiGraphics,…)` → `extractContent(GuiGraphicsExtractor,…)` — a 3-case `//? if >=26.1 … else if >=1.21.11 … else …` (the third case is the old 10-arg `render`).
+- `ctx.drawString(...)` → `ctx.text(...)`, centralised in **`Gfx.text(ctx, …)`** so screen bodies don't need per-call `//?` (only the method signatures carrying the `GuiGraphics`/`GuiGraphicsExtractor` type do).
+- `Player.displayClientMessage(c, false)` → `sendSystemMessage(c)`, via the **`ChatFeedback.send(player, c)`** helper.
+- `fill`, `enableScissor`, `disableScissor`, `pose()` unchanged (called directly on the context).
 
 When porting/adding a feature: write it for the active node, `./gradlew :<node>:build`, then switch active to each other node and add `//?` where the compiler reports mismatches. To find a Mojmap signature for a version, inspect the cached jar:
 `javap -classpath ~/.gradle/caches/fabric-loom/<mc>/minecraft-client.jar 'net.minecraft.client.gui.GuiGraphicsExtractor'`

@@ -1,6 +1,10 @@
 package fr.minestrator.helper.screen;
 
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -63,30 +67,39 @@ public class ConfigScreen extends Screen {
         );
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21
         /*this.renderBackground(context);*/
+        //? if >=26.1 {
+        /*super.extractRenderState(context, mouseX, mouseY, delta);
+        *///?} else {
         super.render(context, mouseX, mouseY, delta);
+        //?}
 
         int centerX = this.width / 2;
         int startY = this.height / 4;
 
         String titleStr = this.title.getString();
-        context.drawString(this.font, titleStr,
+        Gfx.text(context, this.font, titleStr,
                 centerX - this.font.width(titleStr) / 2, 20, 0xFFFFFFFF, true);
 
         String apiStr = "API: " + logic.getApiBaseUrl();
-        context.drawString(this.font, apiStr,
+        Gfx.text(context, this.font, apiStr,
                 centerX - this.font.width(apiStr) / 2, startY - 10, 0xFF808080, true);
 
         String tokenLabel = Component.translatable("minestratorhelper.config.token").getString();
-        context.drawString(this.font, tokenLabel, centerX - 150, startY + 8, 0xFFA0A0A0, true);
+        Gfx.text(context, this.font, tokenLabel, centerX - 150, startY + 8, 0xFFA0A0A0, true);
 
         String statusMessage = logic.getStatusMessage();
         if (statusMessage != null) {
             String displayMessage = Component.translatable(statusMessage).getString();
-            context.drawString(this.font, displayMessage,
+            Gfx.text(context, this.font, displayMessage,
                     centerX - this.font.width(displayMessage) / 2, startY + 145,
                     logic.isStatusSuccess() ? 0xFF55FF55 : 0xFFFF5555, true);
         }

@@ -4,7 +4,11 @@ import fr.minestrator.helper.api.BoxInfo;
 import fr.minestrator.helper.api.ServerInfo;
 import fr.minestrator.helper.api.ServerLiveData;
 import net.minecraft.client.Minecraft;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 
@@ -85,7 +89,12 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
             this.box = box;
         }
 
-        //? if >=1.21.11 {
+        //? if >=26.1 {
+        /*@Override
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            renderRow(context, getX(), getY(), getWidth(), getHeight());
+        }
+        *///?} else if >=1.21.11 {
         @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, getX(), getY(), getWidth(), getHeight());
@@ -98,19 +107,23 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
         *///?}
 
+        //? if >=26.1 {
+        /*private void renderRow(GuiGraphicsExtractor context, int x, int y, int w, int h) {
+        *///?} else {
         private void renderRow(GuiGraphics context, int x, int y, int w, int h) {
+        //?}
             context.fill(x, y, x + w, y + h, 0x60404040);
 
             Minecraft mc = Minecraft.getInstance();
 
-            context.drawString(mc.font, box.getName(), x + 5, y + 4, 0xFFFFAA00, true);
+            Gfx.text(context, mc.font, box.getName(), x + 5, y + 4, 0xFFFFAA00, true);
 
             String offerText = box.getOffer() + " - " + box.getRam() + "GB RAM";
-            context.drawString(mc.font, offerText, x + 5, y + 16, 0xFF888888, false);
+            Gfx.text(context, mc.font, offerText, x + 5, y + 16, 0xFF888888, false);
 
             String infoText = box.getHashSupport() + " - " + box.getTendDays() + "j";
             int infoWidth = mc.font.width(infoText);
-            context.drawString(mc.font, infoText, x + w - infoWidth - 10, y + 10, 0xFF666666, false);
+            Gfx.text(context, mc.font, infoText, x + w - infoWidth - 10, y + 10, 0xFF666666, false);
         }
 
         //? if >=1.21.11 {
@@ -157,7 +170,12 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
             }));
         }
 
-        //? if >=1.21.11 {
+        //? if >=26.1 {
+        /*@Override
+        public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            renderRow(context, getX(), getY(), getWidth());
+        }
+        *///?} else if >=1.21.11 {
         @Override
         public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovering, float partialTick) {
             renderRow(context, getX(), getY(), getWidth());
@@ -170,7 +188,11 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
         }
         *///?}
 
+        //? if >=26.1 {
+        /*private void renderRow(GuiGraphicsExtractor context, int x, int y, int w) {
+        *///?} else {
         private void renderRow(GuiGraphics context, int x, int y, int w) {
+        //?}
             int indent = 15;
 
             Minecraft mc = Minecraft.getInstance();
@@ -178,30 +200,30 @@ public class ServerListWidget extends ObjectSelectionList<ServerListWidget.Entry
 
             context.fill(x + 3, y + 6, x + 9, y + 12, data.getStateColor());
 
-            context.drawString(mc.font, server.getName(), x + indent, y + 4, data.getNameColor(), false);
+            Gfx.text(context, mc.font, server.getName(), x + indent, y + 4, data.getNameColor(), false);
 
-            context.drawString(mc.font, server.getConnectionAddress(), x + indent, y + 16, 0xFFAAAAAA, false);
+            Gfx.text(context, mc.font, server.getConnectionAddress(), x + indent, y + 16, 0xFFAAAAAA, false);
 
             String versionText = data.getVersionText();
             if (!versionText.isEmpty()) {
-                context.drawString(mc.font, versionText, x + indent, y + 28, 0xFF666666, false);
+                Gfx.text(context, mc.font, versionText, x + indent, y + 28, 0xFF666666, false);
             } else {
-                context.drawString(mc.font, server.getHashSupport(), x + indent, y + 28, 0xFF666666, false);
+                Gfx.text(context, mc.font, server.getHashSupport(), x + indent, y + 28, 0xFF666666, false);
             }
 
             String statusKey = data.getStatusKey();
             String statusText = statusKey != null ? Component.translatable(statusKey).getString() : "...";
             int statusWidth = mc.font.width(statusText);
-            context.drawString(mc.font, statusText, x + w - statusWidth - 10, y + 4, data.getStatusColor(), false);
+            Gfx.text(context, mc.font, statusText, x + w - statusWidth - 10, y + 4, data.getStatusColor(), false);
 
             String playersText = data.getPlayersText();
             if (!playersText.isEmpty()) {
                 int playersWidth = mc.font.width(playersText);
-                context.drawString(mc.font, playersText, x + w - playersWidth - 10, y + 16, 0xFFAAAAAA, false);
+                Gfx.text(context, mc.font, playersText, x + w - playersWidth - 10, y + 16, 0xFFAAAAAA, false);
             }
 
             if (server.isBedrock()) {
-                context.drawString(mc.font, "Bedrock", x + w - 50, y + 28, 0xFF55FFFF, false);
+                Gfx.text(context, mc.font, "Bedrock", x + w - 50, y + 28, 0xFF55FFFF, false);
             }
         }
 
