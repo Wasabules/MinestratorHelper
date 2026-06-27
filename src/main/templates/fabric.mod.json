@@ -14,6 +14,7 @@
   "depends": {
     "fabricloader": ">=0.15",
     "minecraft": "${minecraft_version_range}",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "architectury": "*"
   }
 }

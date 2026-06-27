@@ -25,26 +25,35 @@ public final class ScreenButtons {
                         Component.translatable("minestratorhelper.button.my_servers"),
                         b -> Minecraft.getInstance().setScreen(new HostedServersScreen(screen))
                 ).bounds(screen.width - 110, 5, 105, 20).build());
-            } else if (screen instanceof PauseScreen && ServerStateManager.isOnHostedServer()) {
+            } else if (screen instanceof PauseScreen) {
                 int x = screen.width / 2 + 104;
                 int y = screen.height / 4 + 72;
 
+                // Always available — opens the list where you can pin a server for F6 (proxy-safe).
                 access.addRenderableWidget(Button.builder(
-                        Component.translatable("minestratorhelper.button.restart"),
-                        b -> powerAction(b, "restart", "restarting", "restart_success", "restart_failed")
+                        Component.translatable("minestratorhelper.button.my_servers"),
+                        b -> Minecraft.getInstance().setScreen(new HostedServersScreen(screen))
                 ).bounds(x, y, 98, 20).build());
 
-                access.addRenderableWidget(Button.builder(
-                        Component.translatable("minestratorhelper.button.stop"),
-                        b -> powerAction(b, "stop", "stopping", "stop_success", "stop_failed")
-                ).bounds(x, y + 24, 98, 20).build());
+                // Power actions only when a server is targeted (pinned or auto-detected).
+                if (ServerStateManager.isOnHostedServer()) {
+                    access.addRenderableWidget(Button.builder(
+                            Component.translatable("minestratorhelper.button.restart"),
+                            b -> powerAction(b, "restart", "restarting", "restart_success", "restart_failed")
+                    ).bounds(x, y + 24, 98, 20).build());
+
+                    access.addRenderableWidget(Button.builder(
+                            Component.translatable("minestratorhelper.button.stop"),
+                            b -> powerAction(b, "stop", "stopping", "stop_success", "stop_failed")
+                    ).bounds(x, y + 48, 98, 20).build());
+                }
             }
         });
     }
 
     private static void powerAction(Button button, String action,
                                     String progressKey, String successKey, String failKey) {
-        Integer serverId = ServerStateManager.getCurrentServerId();
+        Integer serverId = ServerStateManager.getEffectiveServerId();
         if (serverId == null) return;
 
         button.active = false;

@@ -25,6 +25,7 @@ public class HostedServersScreen extends Screen {
     private Button joinButton;
     private Button startButton;
     private Button stopButton;
+    private Button pinButton;
     private Button refreshButton;
 
     public HostedServersScreen(Screen parent) {
@@ -65,9 +66,9 @@ public class HostedServersScreen extends Screen {
 
         // Bottom: action buttons for the selected server.
         int buttonY = this.height - 28;
-        int buttonWidth = 80;
+        int buttonWidth = 66;
         int spacing = 4;
-        int startX = this.width / 2 - (buttonWidth * 4 + spacing * 3) / 2;
+        int startX = this.width / 2 - (buttonWidth * 5 + spacing * 4) / 2;
 
         this.joinButton = Button.builder(Component.translatable("minestratorhelper.servers.join"),
                 button -> joinSelectedServer()).bounds(startX, buttonY, buttonWidth, 20).build();
@@ -75,7 +76,7 @@ public class HostedServersScreen extends Screen {
         this.addRenderableWidget(this.joinButton);
 
         this.startButton = Button.builder(Component.translatable("minestratorhelper.servers.start"),
-                button -> startSelectedServer()).bounds(startX + buttonWidth + spacing, buttonY, buttonWidth, 20).build();
+                button -> startSelectedServer()).bounds(startX + (buttonWidth + spacing), buttonY, buttonWidth, 20).build();
         this.startButton.active = false;
         this.addRenderableWidget(this.startButton);
 
@@ -84,8 +85,14 @@ public class HostedServersScreen extends Screen {
         this.stopButton.active = false;
         this.addRenderableWidget(this.stopButton);
 
+        // Pin the selected server for the F6 console (overrides auto-detection — works behind proxies).
+        this.pinButton = Button.builder(Component.translatable("minestratorhelper.servers.pin"),
+                button -> pinSelectedServer()).bounds(startX + (buttonWidth + spacing) * 3, buttonY, buttonWidth, 20).build();
+        this.pinButton.active = false;
+        this.addRenderableWidget(this.pinButton);
+
         this.refreshButton = Button.builder(Component.translatable("minestratorhelper.servers.refresh"),
-                button -> refreshServers()).bounds(startX + (buttonWidth + spacing) * 3, buttonY, buttonWidth, 20).build();
+                button -> refreshServers()).bounds(startX + (buttonWidth + spacing) * 4, buttonY, buttonWidth, 20).build();
         this.addRenderableWidget(this.refreshButton);
 
         refreshServers();
@@ -100,6 +107,19 @@ public class HostedServersScreen extends Screen {
         if (entry != null) {
             connectToServer(entry.getServerInfo());
         }
+    }
+
+    /** Pin (or unpin) the selected server so the F6 console targets it regardless of the connected IP. */
+    private void pinSelectedServer() {
+        ServerListWidget.ServerEntry entry = this.serverListWidget.getSelectedServer();
+        if (entry == null) return;
+        ServerInfo server = entry.getServerInfo();
+        if (ServerStateManager.isPinned() && server.getId() == ServerStateManager.getPinnedServerId()) {
+            ServerStateManager.clearPin();
+        } else {
+            ServerStateManager.pinServer(server.getId(), server.getName());
+        }
+        updateButtonStates();
     }
 
     private void startSelectedServer() {
@@ -178,6 +198,12 @@ public class HostedServersScreen extends Screen {
         this.stopButton.active = states.stopEnabled;
         this.startButton.setMessage(Component.translatable(states.startText));
         this.stopButton.setMessage(Component.translatable(states.stopText));
+
+        this.pinButton.active = server != null;
+        boolean thisPinned = server != null && ServerStateManager.isPinned()
+                && server.getId() == ServerStateManager.getPinnedServerId();
+        this.pinButton.setMessage(Component.translatable(
+                thisPinned ? "minestratorhelper.servers.unpin" : "minestratorhelper.servers.pin"));
     }
 
     //? if >=26.1 {
@@ -197,6 +223,12 @@ public class HostedServersScreen extends Screen {
         String titleStr = this.title.getString();
         Gfx.text(context, this.font, titleStr,
                 this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFFFF, true);
+
+        if (ServerStateManager.isPinned()) {
+            String pinStr = Component.translatable("minestratorhelper.servers.pinned_to",
+                    ServerStateManager.getEffectiveServerName()).getString();
+            Gfx.text(context, this.font, pinStr, 60, 12, 0xFF55FF55, true);
+        }
 
         // Live stats gauges for the selected server (monitoring)
         ServerListWidget.ServerEntry sel = this.serverListWidget != null

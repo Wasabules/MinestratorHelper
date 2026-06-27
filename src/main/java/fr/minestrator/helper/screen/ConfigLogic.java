@@ -12,6 +12,7 @@ import java.util.function.Consumer;
  */
 public class ConfigLogic {
     private String statusMessage = null;
+    private String statusArg = null;
     private boolean statusSuccess = false;
     private boolean testing = false;
 
@@ -29,6 +30,7 @@ public class ConfigLogic {
     }
 
     public void testConnection(String token, Consumer<UserInfo> onSuccess, Consumer<String> onFailure, Runnable onComplete) {
+        statusArg = null;
         if (token == null || token.isEmpty()) {
             statusMessage = "minestratorhelper.config.token_required";
             statusSuccess = false;
@@ -47,6 +49,7 @@ public class ConfigLogic {
             testing = false;
             if (user != null) {
                 statusMessage = "minestratorhelper.config.test_success";
+                statusArg = user.getPseudo();
                 statusSuccess = true;
                 onSuccess.accept(user);
             } else {
@@ -62,6 +65,10 @@ public class ConfigLogic {
 
     public String getStatusMessage() {
         return statusMessage;
+    }
+
+    public String getStatusArg() {
+        return statusArg;
     }
 
     public boolean isStatusSuccess() {
