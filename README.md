@@ -11,6 +11,7 @@ Built from a **single codebase** that targets multiple mod loaders **and** multi
 | 1.20.1    | ✅     | —        |
 | 1.21.1    | ✅     | ✅       |
 | 1.21.11   | ✅     | ✅       |
+| 26.1.2    | ✅     | ✅       |
 
 > NeoForge does not exist for 1.20.1 (it starts at MC 1.20.2), so 1.20.1 is Fabric-only.
 

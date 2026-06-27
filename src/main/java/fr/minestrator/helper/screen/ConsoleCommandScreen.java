@@ -2,7 +2,11 @@ package fr.minestrator.helper.screen;
 
 import fr.minestrator.helper.util.AnsiParser;
 import fr.minestrator.helper.util.LogLine;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -186,11 +190,20 @@ public class ConsoleCommandScreen extends Screen {
     }
     *///?}
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21
         /*this.renderBackground(context);*/
+        //? if >=26.1 {
+        /*super.extractRenderState(context, mouseX, mouseY, delta);
+        *///?} else {
         super.render(context, mouseX, mouseY, delta);
+        //?}
 
         int areaTop = 52;
         int areaBottom = this.height - 34;
@@ -198,7 +211,7 @@ public class ConsoleCommandScreen extends Screen {
 
         String serverName = logic.getServerName();
         String header = "Console — " + (serverName != null ? serverName : "?");
-        context.drawString(this.font, header, 8, 8, 0xFFFFFFFF, true);
+        Gfx.text(context, this.font, header, 8, 8, 0xFFFFFFFF, true);
 
         var live = logic.getLiveData();
         if (live != null) {
@@ -249,7 +262,7 @@ public class ConsoleCommandScreen extends Screen {
         context.enableScissor(4, areaTop, this.width - 4, areaBottom);
         int y = areaTop;
         for (int i = startIdx; i < endIdx; i++) {
-            context.drawString(this.font, visual.get(i), 8, y, 0xFFFFFFFF, false);
+            Gfx.text(context, this.font, visual.get(i), 8, y, 0xFFFFFFFF, false);
             y += lineHeight;
         }
         context.disableScissor();
@@ -308,7 +321,11 @@ public class ConsoleCommandScreen extends Screen {
         return false;
     }
 
+    //? if >=26.1 {
+    /*private void drawFilters(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+    *///?} else {
     private void drawFilters(GuiGraphics ctx, int mouseX, int mouseY) {
+    //?}
         int[] colors = {0xAAAAAA, 0xE08000, 0xE05555}; // grey / orange / red
         String[] names = {"INFO", "WARN", "ERROR"};
         ctx.fill(filterX(0) - 3, filterY() - 3, filterX(2) + FILTER_SIZE + 3, filterY() + FILTER_SIZE + 3, 0xC0000000);
@@ -327,7 +344,7 @@ public class ConsoleCommandScreen extends Screen {
             int tx = mouseX - w - 8, ty = mouseY - this.font.lineHeight - 6;
             ctx.fill(tx - 3, ty - 3, tx + w + 3, ty + this.font.lineHeight + 3, 0xF0100010);
             Gauges.drawBorder(ctx, tx - 3, ty - 3, w + 6, this.font.lineHeight + 6, 0x60FFFFFF);
-            ctx.drawString(this.font, tip, tx, ty, 0xFFFFFFFF, false);
+            Gfx.text(ctx, this.font, tip, tx, ty, 0xFFFFFFFF, false);
         }
     }
 

@@ -2,7 +2,11 @@ package fr.minestrator.helper.screen;
 
 import fr.minestrator.helper.api.BoxInfo;
 import fr.minestrator.helper.api.ServerInfo;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -176,13 +180,22 @@ public class HostedServersScreen extends Screen {
         this.stopButton.setMessage(Component.translatable(states.stopText));
     }
 
+    //? if >=26.1 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    *///?} else {
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    //?}
         //? if <1.21
         /*this.renderBackground(context);*/
+        //? if >=26.1 {
+        /*super.extractRenderState(context, mouseX, mouseY, delta);
+        *///?} else {
         super.render(context, mouseX, mouseY, delta);
+        //?}
         String titleStr = this.title.getString();
-        context.drawString(this.font, titleStr,
+        Gfx.text(context, this.font, titleStr,
                 this.width / 2 - this.font.width(titleStr) / 2, 12, 0xFFFFFFFF, true);
 
         // Live stats gauges for the selected server (monitoring)
@@ -209,17 +222,17 @@ public class HostedServersScreen extends Screen {
                     "Joueurs", live.getCurrentPlayers() + "/" + live.getMaxPlayers());
         } else if (!logic.isLoading() && logic.getErrorMessage() == null) {
             String hint = "Sélectionne un serveur pour voir ses statistiques";
-            context.drawString(this.font, hint,
+            Gfx.text(context, this.font, hint,
                     this.width / 2 - this.font.width(hint) / 2, 44, 0xFF888888, true);
         }
 
         if (logic.isLoading()) {
             String loadingStr = Component.translatable("minestratorhelper.servers.loading").getString();
-            context.drawString(this.font, loadingStr,
+            Gfx.text(context, this.font, loadingStr,
                     this.width / 2 - this.font.width(loadingStr) / 2, this.height / 2, 0xFFAAAAAA, true);
         } else if (logic.getErrorMessage() != null) {
             String errorStr = Component.translatable(logic.getErrorMessage()).getString();
-            context.drawString(this.font, errorStr,
+            Gfx.text(context, this.font, errorStr,
                     this.width / 2 - this.font.width(errorStr) / 2, this.height / 2, 0xFFFF5555, true);
         }
     }

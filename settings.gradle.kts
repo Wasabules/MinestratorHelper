@@ -26,7 +26,7 @@ stonecutter {
         mc("1.20.1", listOf("fabric"))                  // NeoForge starts at 1.20.2
         mc("1.21.1", listOf("fabric", "neoforge"))
         mc("1.21.11", listOf("fabric", "neoforge"))
-        // mc("26.1.2", listOf("fabric", "neoforge"))   // phase 2: needs the 26.1 GUI rendering port
+        mc("26.1.2", listOf("fabric", "neoforge"))
 
         vcsVersion = "1.21.11-fabric"
     }

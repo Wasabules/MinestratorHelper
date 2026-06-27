@@ -66,13 +66,13 @@ public final class Commands {
                     var player = Minecraft.getInstance().player;
                     if (player == null) return;
                     if (success) {
-                        player.displayClientMessage(Component.translatable(
+                        ChatFeedback.send(player, Component.translatable(
                                 "minestratorhelper.command.sudo_sent", command)
-                                .withStyle(ChatFormatting.GREEN), false);
+                                .withStyle(ChatFormatting.GREEN));
                     } else {
-                        player.displayClientMessage(Component.translatable(
+                        ChatFeedback.send(player, Component.translatable(
                                 "minestratorhelper.command.sudo_failed")
-                                .withStyle(ChatFormatting.RED), false);
+                                .withStyle(ChatFormatting.RED));
                     }
                 }));
         return 1;
@@ -141,13 +141,13 @@ public final class Commands {
                     var player = Minecraft.getInstance().player;
                     if (player == null) return;
                     if (success) {
-                        player.displayClientMessage(Component.translatable(
+                        ChatFeedback.send(player, Component.translatable(
                                 "minestratorhelper.command." + key + "_success", serverName)
-                                .withStyle(ChatFormatting.GREEN), false);
+                                .withStyle(ChatFormatting.GREEN));
                     } else {
-                        player.displayClientMessage(Component.translatable(
+                        ChatFeedback.send(player, Component.translatable(
                                 "minestratorhelper.command." + key + "_failed")
-                                .withStyle(ChatFormatting.RED), false);
+                                .withStyle(ChatFormatting.RED));
                     }
                 }));
         return 1;

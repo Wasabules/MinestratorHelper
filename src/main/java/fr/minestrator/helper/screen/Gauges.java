@@ -1,7 +1,11 @@
 package fr.minestrator.helper.screen;
 
 import net.minecraft.client.gui.Font;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 
 /**
  * Small UI helper to draw a labelled fill gauge laid out vertically:
@@ -15,10 +19,15 @@ public final class Gauges {
     /** Total vertical space a gauge occupies (label + bar + value). */
     public static final int HEIGHT = 25;
 
+    //? if >=26.1 {
+    /*public static void drawGauge(GuiGraphicsExtractor ctx, Font font, int x, int y, int w, int percent,
+                                 String label, String value) {
+    *///?} else {
     public static void drawGauge(GuiGraphics ctx, Font font, int x, int y, int w, int percent,
                                  String label, String value) {
+    //?}
         int p = Math.max(0, Math.min(100, percent));
-        ctx.drawString(font, label, x, y, 0xFFBBBBBB, true);
+        Gfx.text(ctx, font, label, x, y, 0xFFBBBBBB, true);
 
         int barY = y + 9;
         int barH = 6;
@@ -26,7 +35,7 @@ public final class Gauges {
         int fillW = Math.round(w * p / 100.0f);
         ctx.fill(x, barY, x + fillW, barY + barH, 0xFF000000 | colorFor(p));
 
-        ctx.drawString(font, value, x, barY + barH + 2, 0xFFFFFFFF, true);
+        Gfx.text(ctx, font, value, x, barY + barH + 2, 0xFFFFFFFF, true);
     }
 
     public static int colorFor(int percent) {
@@ -36,7 +45,11 @@ public final class Gauges {
     }
 
     /** Draws a 1px rectangular border. */
+    //? if >=26.1 {
+    /*public static void drawBorder(GuiGraphicsExtractor ctx, int x, int y, int w, int h, int color) {
+    *///?} else {
     public static void drawBorder(GuiGraphics ctx, int x, int y, int w, int h, int color) {
+    //?}
         ctx.fill(x, y, x + w, y + 1, color);
         ctx.fill(x, y + h - 1, x + w, y + h, color);
         ctx.fill(x, y, x + 1, y + h, color);
